@@ -1,0 +1,30 @@
+# Product source is Buraaq (.bq). GitHub Linguist has no Buraaq entry yet;
+# vendor the packager/runtime so the bar is not "Rust 78%".
+*.bq linguist-detectable
+*.bq linguist-language=Buraaq
+
+compiler/** linguist-vendored
+stdlib/runtime/** linguist-vendored
+stdlib/**/*.c linguist-vendored
+stdlib/**/*.h linguist-vendored
+stdlib/**/*.rs linguist-vendored
+stdlib/**/*.ll linguist-generated
+**/*.ll linguist-generated
+
+benchmarks/cpp/** linguist-vendored
+benchmarks/rust/** linguist-vendored
+benchmarks/go/** linguist-vendored
+benchmarks/python/** linguist-vendored
+benchmarks/zig/** linguist-vendored
+benchmarks/harness/** linguist-vendored
+benchmarks/refs/** linguist-vendored
+
+dist/** linguist-vendored
+docs/** linguist-documentation
+.github/** linguist-documentation
+**/*.ps1 linguist-vendored
+**/*.sh linguist-vendored
+**/*.html linguist-vendored
+**/*.toml linguist-vendored
+**/*.lock linguist-generated
+grammar/** linguist-documentation
