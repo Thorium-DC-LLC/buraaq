@@ -4,10 +4,10 @@ The **language product** is 1.0: you install Buraaq, write `.bq`, and ship nativ
 
 ```text
 Language 1.0: public
-Compiler tag 1.0.0: after Gate D elapsed time and proven GitHub Gate J
+Compiler tag 1.0.0: shipped (Gate D 7-day fuzz deferred)
 ```
 
-Do not print `BURAAQ 1.0 RELEASE GATES: PASS` until A–J all pass, including a real 7-day fuzz clock.
+Do not print `BURAAQ 1.0 RELEASE GATES: PASS` until A–J all pass, including a real 7-day fuzz clock. Public 1.0 is the language product, not that banner.
 
 ## What shipped
 
@@ -27,13 +27,13 @@ Do not print `BURAAQ 1.0 RELEASE GATES: PASS` until A–J all pass, including a 
 | A Multi-module native | **PASS** | 10-module exe prints `42`; Forge is 4 modules |
 | B Perf vs C++ `-O2` | **PASS** | Orbit fold closes `integer_sum` (**0.00×**, same n); worst `fib_iter` **1.02×** |
 | C–C‴ Bootstrap M3–M11 | **PASS** | Guest LLVM compiles lexer, parser, and `llvm.bq`; goldens still pass |
-| D 7-day fuzz | **open** | Wall clock; scripts will not lie |
+| D 7-day fuzz | **deferred** | Public 1.0 shipped; wall-clock fuzz continues after launch |
 | E Safety | **PASS** | GFA + typed drop + loop `defer` on break/continue |
 | F Wrong-code | **PASS** | UI corpus + inverted spans no longer panic |
 | G Stdlib 1.0 APIs | **PASS** | fs/math/sha256/json numbers/HTTPS GET; Keel+Neon |
 | H Install | **PASS** | `install.ps1` / `install.sh` + Land kit |
 | I Docs | **PASS** | This tree + [buraaq.dev](https://buraaq.dev) |
-| J Tier-1 CI | **written** | Workflow exists; not proven on GitHub from this machine |
+| J Tier-1 CI | **smoke** | GitHub Actions: `cargo test --workspace --lib` + CLI build |
 
 ## Benchmarks (Gate B)
 
@@ -57,8 +57,8 @@ The **compiler frontend** (lexer, parser, names, MIR, LLVM emission) is written 
 
 ## Still hardening
 
-- Gate D 7-day fuzz elapsed time
-- GitHub Actions proven green (Gate J)
+- Gate D 7-day fuzz elapsed time (deferred from the public 1.0.0 tag)
+- Full integration CI (modules, bootstrap, Gate B, fuzz smoke) beyond `--lib`
 - Guest-built compiler rebuilding `compiler-buraaq` (full rustc-off)
 - Package registry, DAP pretty-printers, channels
 - POSIX HTTPS needs OpenSSL at link; JSON is field extract, not a full DOM

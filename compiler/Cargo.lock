@@ -77,7 +77,7 @@ dependencies = [
 
 [[package]]
 name = "buraaq"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "buraaq_codegen",
  "buraaq_diagnostics",
@@ -95,14 +95,14 @@ dependencies = [
 
 [[package]]
 name = "buraaq_ast"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "buraaq_source",
 ]
 
 [[package]]
 name = "buraaq_borrow"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "buraaq_diagnostics",
  "buraaq_ownership",
@@ -112,7 +112,7 @@ dependencies = [
 
 [[package]]
 name = "buraaq_codegen"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "buraaq_diagnostics",
  "buraaq_driver",
@@ -126,7 +126,7 @@ dependencies = [
 
 [[package]]
 name = "buraaq_diagnostics"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "buraaq_source",
  "insta",
@@ -136,7 +136,7 @@ dependencies = [
 
 [[package]]
 name = "buraaq_doc"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "buraaq_ast",
  "buraaq_diagnostics",
@@ -147,7 +147,7 @@ dependencies = [
 
 [[package]]
 name = "buraaq_driver"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "buraaq_ast",
  "buraaq_codegen",
@@ -165,7 +165,7 @@ dependencies = [
 
 [[package]]
 name = "buraaq_fmt"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "buraaq_source",
  "walkdir",
@@ -173,7 +173,7 @@ dependencies = [
 
 [[package]]
 name = "buraaq_frontend"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "buraaq_ast",
  "buraaq_diagnostics",
@@ -186,7 +186,7 @@ dependencies = [
 
 [[package]]
 name = "buraaq_lexer"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "buraaq_diagnostics",
  "buraaq_source",
@@ -195,7 +195,7 @@ dependencies = [
 
 [[package]]
 name = "buraaq_lsp"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "buraaq_ast",
  "buraaq_diagnostics",
@@ -214,7 +214,7 @@ dependencies = [
 
 [[package]]
 name = "buraaq_mir"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "buraaq_ast",
  "buraaq_diagnostics",
@@ -226,7 +226,7 @@ dependencies = [
 
 [[package]]
 name = "buraaq_ownership"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "buraaq_diagnostics",
  "buraaq_source",
@@ -235,7 +235,7 @@ dependencies = [
 
 [[package]]
 name = "buraaq_parser"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "buraaq_ast",
  "buraaq_diagnostics",
@@ -246,7 +246,7 @@ dependencies = [
 
 [[package]]
 name = "buraaq_pkg"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "buraaq_ast",
  "buraaq_diagnostics",
@@ -264,7 +264,7 @@ dependencies = [
 
 [[package]]
 name = "buraaq_semantic"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "buraaq_ast",
  "buraaq_borrow",
@@ -278,7 +278,7 @@ dependencies = [
 
 [[package]]
 name = "buraaq_ship"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "sha2",
  "thiserror",
@@ -287,14 +287,14 @@ dependencies = [
 
 [[package]]
 name = "buraaq_source"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "unicode-width",
 ]
 
 [[package]]
 name = "buraaq_types"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "buraaq_ast",
  "buraaq_source",

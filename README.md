@@ -1,5 +1,8 @@
 # Buraaq 1.0
 
+[![Release](https://img.shields.io/github/v/release/Thorium-DC-LLC/buraaq)](https://github.com/Thorium-DC-LLC/buraaq/releases/latest)
+[![License: MIT](https://img.shields.io/badge/license-MIT-22d3ee.svg)](LICENSE)
+
 **Write like Python. Run like C.**
 
 A self-hosted systems language from **Thorium DC, LLC**. You write `.bq`. LLVM emits a native binary. There is no garbage collector, no interpreter, and no Docker image on the default path. Unique `std.*` names import themselves. Rust is not required to install.
@@ -26,6 +29,10 @@ Site: [buraaq.dev](https://buraaq.dev)
 ## Install (one step)
 
 You need **Buraaq** and **clang**. You do **not** need Rust, Cargo, Node, or a JVM.
+
+**Windows binary:** [github.com/Thorium-DC-LLC/buraaq/releases/latest](https://github.com/Thorium-DC-LLC/buraaq/releases/latest)
+
+Or clone and install (packs `dist/buraaq` + stdlib onto PATH):
 
 ```powershell
 git clone https://github.com/Thorium-DC-LLC/buraaq.git
