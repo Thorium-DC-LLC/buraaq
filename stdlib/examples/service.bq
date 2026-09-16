@@ -1,0 +1,10 @@
+# Production TLS service — the whole program
+module example.service
+
+use std.keel.{page, api, run}
+
+fn main() {
+    page("/", "public/index.html")
+    api("items", "title, body")
+    run()
+}

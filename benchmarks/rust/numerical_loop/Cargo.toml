@@ -1,0 +1,8 @@
+[package]
+name = "bench_numerical_loop"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "numerical_loop"
+path = "src/main.rs"

@@ -1,0 +1,211 @@
+# M5 — name table for the golden subset: fn / param / local / builtin / fnref
+use scan.scan_ident_end
+use scan.scan_is_digit
+use scan.scan_is_ident_start
+use scan.scan_skip
+use scan.scan_skip_type
+use scan.scan_word_is
+use std.fs.read
+use std.io.println
+use std.text.byte
+use std.text.eq
+use std.text.len
+use std.text.slice
+
+fn n_bind(name: text, p0: text, p1: text, np: int) {
+    if eq(name, "print") {
+        println("builtin")
+        println(name)
+    } elif eq(name, "println") {
+        println("builtin")
+        println(name)
+    } elif np > 0 {
+        if eq(name, p0) {
+            println("local")
+            println(name)
+        } elif np > 1 {
+            if eq(name, p1) {
+                println("local")
+                println(name)
+            } else {
+                println("fnref")
+                println(name)
+            }
+        } else {
+            println("fnref")
+            println(name)
+        }
+    } else {
+        println("fnref")
+        println(name)
+    }
+}
+
+fn n_args(src: text, idx: int, n: int, p0: text, p1: text, np: int) -> int {
+    i = scan_skip(src, idx, n)
+    if byte(src, i) == 40 {
+        i = i + 1
+    }
+    i = scan_skip(src, i, n)
+    if byte(src, i) == 41 {
+        return i + 1
+    }
+    i = n_expr(src, i, n, p0, p1, np)
+    i = scan_skip(src, i, n)
+    while byte(src, i) == 44 {
+        i = n_expr(src, i + 1, n, p0, p1, np)
+        i = scan_skip(src, i, n)
+    }
+    if byte(src, i) == 41 {
+        i = i + 1
+    }
+    i
+}
+
+fn n_prefix(src: text, idx: int, n: int, p0: text, p1: text, np: int) -> int {
+    i = scan_skip(src, idx, n)
+    c = byte(src, i)
+    if scan_is_digit(c) {
+        e = i
+        while e < n {
+            if scan_is_digit(byte(src, e)) {
+                e = e + 1
+            } else {
+                break
+            }
+        }
+        return e
+    }
+    if scan_is_ident_start(c) {
+        e = scan_ident_end(src, i, n)
+        name = slice(src, i, e)
+        i = scan_skip(src, e, n)
+        if byte(src, i) == 40 {
+            n_bind(name, p0, p1, np)
+            return n_args(src, i, n, p0, p1, np)
+        }
+        n_bind(name, p0, p1, np)
+        return e
+    }
+    i
+}
+
+fn n_expr(src: text, idx: int, n: int, p0: text, p1: text, np: int) -> int {
+    i = n_prefix(src, idx, n, p0, p1, np)
+    i = scan_skip(src, i, n)
+    c = byte(src, i)
+    nxt = byte(src, i + 1)
+    if c == 43 {
+        return n_prefix(src, i + 1, n, p0, p1, np)
+    }
+    if c == 45 {
+        if nxt != 62 {
+            return n_prefix(src, i + 1, n, p0, p1, np)
+        }
+    }
+    if c == 62 {
+        if nxt == 61 {
+            return n_prefix(src, i + 2, n, p0, p1, np)
+        }
+        return n_prefix(src, i + 1, n, p0, p1, np)
+    }
+    i
+}
+
+fn n_block(src: text, idx: int, n: int, p0: text, p1: text, np: int) -> int {
+    i = scan_skip(src, idx, n)
+    if byte(src, i) == 123 {
+        i = i + 1
+    }
+    i = scan_skip(src, i, n)
+    while i < n {
+        if byte(src, i) == 125 {
+            return i + 1
+        }
+        if scan_word_is(src, i, n, "if") {
+            i = n_if(src, i, n, p0, p1, np)
+        } elif scan_word_is(src, i, n, "return") {
+            i = scan_skip(src, i + 6, n)
+            i = n_expr(src, i, n, p0, p1, np)
+        } else {
+            i = n_expr(src, i, n, p0, p1, np)
+        }
+        i = scan_skip(src, i, n)
+    }
+    i
+}
+
+fn n_if(src: text, idx: int, n: int, p0: text, p1: text, np: int) -> int {
+    i = scan_skip(src, idx + 2, n)
+    i = n_expr(src, i, n, p0, p1, np)
+    n_block(src, i, n, p0, p1, np)
+}
+
+fn n_fn(src: text, idx: int, n: int) -> int {
+    i = scan_skip(src, idx + 2, n)
+    e = scan_ident_end(src, i, n)
+    println("fn")
+    println(slice(src, i, e))
+    i = scan_skip(src, e, n)
+    if byte(src, i) == 40 {
+        i = i + 1
+    }
+    p0 = "_"
+    p1 = "_"
+    np = 0
+    i = scan_skip(src, i, n)
+    while i < n {
+        if byte(src, i) == 41 {
+            i = i + 1
+            break
+        }
+        e = scan_ident_end(src, i, n)
+        pname = slice(src, i, e)
+        println("param")
+        println(pname)
+        if np == 0 {
+            p0 = pname
+            np = 1
+        } else {
+            p1 = pname
+            np = 2
+        }
+        i = scan_skip(src, e, n)
+        if byte(src, i) == 58 {
+            i = scan_skip_type(src, i + 1, n)
+            i = scan_skip(src, i, n)
+        }
+        if byte(src, i) == 44 {
+            i = scan_skip(src, i + 1, n)
+        }
+    }
+    i = scan_skip(src, i, n)
+    if byte(src, i) == 45 {
+        if byte(src, i + 1) == 62 {
+            i = scan_skip_type(src, i + 2, n)
+        }
+    }
+    n_block(src, i, n, p0, p1, np)
+}
+
+pub fn dump_names(path: text) {
+    src = read(path)
+    n = len(src)
+    i = scan_skip(src, 0, n)
+    while i < n {
+        if scan_word_is(src, i, n, "fn") {
+            i = n_fn(src, i, n)
+        } elif scan_word_is(src, i, n, "use") {
+            while i < n {
+                if byte(src, i) == 10 {
+                    i = i + 1
+                    break
+                }
+                i = i + 1
+            }
+        } else {
+            i = i + 1
+        }
+        i = scan_skip(src, i, n)
+    }
+}

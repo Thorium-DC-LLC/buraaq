@@ -1,0 +1,12 @@
+[package]
+name = "buraaq_doc"
+description = "Buraaq API documentation generator"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+buraaq_ast = { path = "../ast" }
+buraaq_parser = { path = "../parser" }
+buraaq_diagnostics = { path = "../diagnostics" }
+buraaq_source = { path = "../source" }
+walkdir = "2"

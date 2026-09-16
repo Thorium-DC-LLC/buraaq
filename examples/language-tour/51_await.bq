@@ -1,0 +1,11 @@
+﻿# 51 — await IO
+async fn fetch_line() throws IOError -> text {
+    await async_io_read_line()
+}
+
+fn main() {
+    task = spawn_task async {
+        await fetch_line()?
+    }
+    print(await task)
+}

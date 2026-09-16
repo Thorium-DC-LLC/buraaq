@@ -1,0 +1,8 @@
+[package]
+name = "bench-channel-rust"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "channel"
+path = "src/main.rs"

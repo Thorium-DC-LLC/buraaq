@@ -1,0 +1,8 @@
+[package]
+name = "bench_integer_sum"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "integer_sum"
+path = "src/main.rs"

@@ -1,0 +1,15 @@
+﻿# 09 — throws sugar
+enum ConfigError {
+    MissingKey(text),
+}
+
+fn load_config() throws ConfigError -> text {
+    raise ConfigError.MissingKey("port")
+}
+
+fn main() {
+    match load_config() {
+        Ok(v) => print(v),
+        Err(e) => print("error"),
+    }
+}

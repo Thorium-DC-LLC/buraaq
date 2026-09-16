@@ -1,0 +1,9 @@
+[package]
+name = "buraaq_fmt"
+description = "Official Buraaq source formatter"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+buraaq_source = { path = "../source" }
+walkdir = "2"

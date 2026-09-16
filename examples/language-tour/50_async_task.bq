@@ -1,0 +1,12 @@
+﻿# 50 — async task
+async fn compute() -> int {
+    40 + 2
+}
+
+fn main() {
+    task = async {
+        await compute()
+    }
+    result = await task
+    print(result.to_text())
+}

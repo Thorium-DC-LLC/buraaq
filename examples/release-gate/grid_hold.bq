@@ -1,0 +1,17 @@
+# Ceremony-free grid (numeric arrays) and hold (tables). No `use`.
+fn main() {
+    println(sin(0.0))
+    println(clamp(5.0, 0.0, 1.0))
+    a = row("1,2,3")
+    b = row("4,5,6")
+    println(dot(a, b))
+    g = eye(2)
+    println(at(g, 0, 0))
+    println(at(g, 1, 1))
+    h = hold("name,cents")
+    stow(h, "checking,100")
+    stow(h, "savings,300")
+    println(rows(h))
+    println(col_mean(h, "cents"))
+    println(pick(h, "name", 0))
+}

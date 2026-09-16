@@ -1,0 +1,5 @@
+use std.io.println
+
+fn main() {
+    println("http-api demo — bind :8080 when std.http server completes")
+}

@@ -1,0 +1,8 @@
+module main
+
+use std.math.abs_int
+use std.io.print_int
+
+fn main() {
+    print_int(abs_int(-7))
+}

@@ -1,0 +1,12 @@
+struct Holder {
+    v: int
+}
+
+fn take(h: Holder) {
+}
+
+fn main() {
+    x = Holder { v: 1 }
+    take(x)
+    print(x.v)
+}

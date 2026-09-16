@@ -1,0 +1,1520 @@
+# M7–M9 LLVM: golden sample + lexer.bq + parser.bq subset (i32/text/bool, while, if/elif/else)
+use scan.scan_ident_end
+use scan.scan_is_digit
+use scan.scan_is_ident_start
+use scan.scan_skip
+use scan.scan_skip_type
+use scan.scan_word_is
+use std.fs.read
+use std.fs.write
+use std.io.println
+use std.text.byte
+use std.text.concat
+use std.text.eq
+use std.text.len
+use std.text.slice
+
+fn l_emit(sink: text, line: text) {
+    lined = concat(line, "\n")
+    if eq(sink, "-") {
+        println(lined)
+    } else {
+        write(sink, concat(read(sink), lined))
+    }
+    done = 1
+}
+
+fn l_open(src: text, n: int) -> text {
+    k = 0
+    while k < n {
+        if byte(src, k) == 123 {
+            return slice(src, k, k + 1)
+        }
+        k = k + 1
+    }
+    slice(src, 0, 0)
+}
+
+fn l_close(src: text, n: int) -> text {
+    k = 0
+    while k < n {
+        if byte(src, k) == 125 {
+            return slice(src, k, k + 1)
+        }
+        k = k + 1
+    }
+    slice(src, 0, 0)
+}
+
+fn l_bag_has(bag: text, name: text) -> bool {
+    needle = concat(",", concat(name, ","))
+    hay = concat(",", bag)
+    hn = len(hay)
+    nn = len(needle)
+    k = 0
+    while k < hn {
+        if k + nn > hn {
+            break
+        }
+        if eq(slice(hay, k, k + nn), needle) {
+            return true
+        }
+        k = k + 1
+    }
+    false
+}
+
+fn l_rt(name: text) -> int {
+    if l_bag_has(",println,print,emit_kind,lex_file,parse_file,dump_names,dump_mir,l_emit,l_load,l_paren_alias,l_intern_span,l_emit_call,l_seta,l_setc,l_local,l_maybe_local,l_close_block,l_close_top,l_close_join,l_spill,l_spill_params,l_emit_strings,ll_emit_module,dump_llvm,build_file,", name) {
+        return 0
+    }
+    if l_bag_has(",read,slice,arg,classify_word,concat,l_open,l_close,l_val,l_quote,l_llvm_esc_byte,l_llvm_esc_span,l_need_local,l_seed_locals,", name) {
+        return 2
+    }
+    1
+}
+
+fn l_peek_want(src: text, idx: int, n: int, ptxt: text) -> int {
+    i = scan_skip(src, idx, n)
+    if byte(src, i) == 34 {
+        return 2
+    }
+    if scan_is_ident_start(byte(src, i)) {
+        e = scan_ident_end(src, i, n)
+        name = slice(src, i, e)
+        j = scan_skip(src, e, n)
+        if byte(src, j) == 40 {
+            rt = l_rt(name)
+            if rt == 2 {
+                return 2
+            }
+            return 1
+        }
+        if l_bag_has(ptxt, name) {
+            return 2
+        }
+        if l_bag_has(",src,path,name,kind,w,slice,read,arg,classify_word,concat,sink,line,body,g,q,ll,exe,clang,cal,dst,plist,iname,rtyt,num,nm,esc,piece,out,def,ty,seen,needle,hay,bag,pall,ptxt,pname,alist,aval,aty,a0,a1,op,tn,fname,pred,left,pty,rt,lined,", name) {
+            return 2
+        }
+        return 1
+    }
+    1
+}
+
+fn l_val(want: int, pos: int) -> text {
+    if want == 2 {
+        return "%p{pos}"
+    }
+    "%t{pos}l"
+}
+
+fn l_is_call(src: text, idx: int, n: int) -> int {
+    i = scan_skip(src, idx, n)
+    if scan_is_ident_start(byte(src, i)) {
+        e = scan_ident_end(src, i, n)
+        j = scan_skip(src, e, n)
+        if byte(src, j) == 40 {
+            return 1
+        }
+        done = 1
+    }
+    0
+}
+
+fn l_arg_slot(src: text, start: int, end: int, want: int, n: int) -> int {
+    slot = start
+    if want == 1 {
+        cal = l_is_call(src, start, n)
+        if cal == 0 {
+            slot = l_plus_in(src, start, end)
+        }
+        done = 1
+    }
+    slot
+}
+
+fn l_plus_in(src: text, a: int, b: int) -> int {
+    plus = a
+    k = a
+    while k < b {
+        c = byte(src, k)
+        if c == 43 {
+            plus = k
+        }
+        if c == 45 {
+            plus = k
+        }
+        if c == 42 {
+            plus = k
+        }
+        if c == 47 {
+            plus = k
+        }
+        if c == 37 {
+            plus = k
+        }
+        k = k + 1
+    }
+    plus
+}
+
+fn l_load(sink: text, name: text, want: int, pos: int, ptxt: text) {
+    if want == 2 {
+        l_emit(sink, "  %p{pos} = load i8*, i8** %{name}.p")
+        done = 1
+    }
+    if want == 1 {
+        l_emit(sink, "  %t{pos}l = load i32, i32* %{name}.i")
+        done = 1
+    }
+    done = 1
+}
+
+fn l_rparen(src: text, idx: int, n: int) -> int {
+    i = idx
+    d = 1
+    while i < n {
+        c = byte(src, i)
+        if c == 40 {
+            d = d + 1
+            done = 1
+        }
+        if c == 41 {
+            d = d - 1
+            if d == 0 {
+                return i + 1
+            }
+            done = 1
+        }
+        i = i + 1
+    }
+    i
+}
+
+fn l_paren_alias(sink: text, pos: int, inner: int, want: int) {
+    if want == 2 {
+        l_emit(sink, "  %p{pos} = bitcast i8* %p{inner} to i8*")
+        done = 1
+    }
+    if want == 1 {
+        l_emit(sink, "  %t{pos}l = add i32 %t{inner}c, 0")
+        done = 1
+    }
+    done = 1
+}
+
+fn l_quote(src: text, n: int) -> text {
+    k = 0
+    while k < n {
+        if byte(src, k) == 34 {
+            return slice(src, k, k + 1)
+        }
+        k = k + 1
+    }
+    slice(src, 0, 0)
+}
+
+fn l_llvm_esc_byte(b: int, q: text) -> text {
+    if b == 92 {
+        return "\\\\"
+    }
+    if b == 10 {
+        return "\\0A"
+    }
+    if b == 13 {
+        return "\\0D"
+    }
+    if b == 9 {
+        return "\\09"
+    }
+    if b == 0 {
+        return "\\00"
+    }
+    if b == 34 {
+        return concat("\\", q)
+    }
+    slice("?", 0, 0)
+}
+
+fn l_decoded_len(src: text, a: int, b: int) -> int {
+    k = a
+    n = 0
+    while k < b {
+        if byte(src, k) == 92 {
+            if k + 1 < b {
+                k = k + 2
+                n = n + 1
+            } else {
+                k = k + 1
+                n = n + 1
+            }
+        } else {
+            k = k + 1
+            n = n + 1
+        }
+    }
+    n
+}
+
+fn l_llvm_esc_span(src: text, a: int, b: int, q: text) -> text {
+    out = slice(src, 0, 0)
+    k = a
+    while k < b {
+        if byte(src, k) == 92 {
+            if k + 1 < b {
+                nxt = byte(src, k + 1)
+                ch = nxt
+                if nxt == 110 {
+                    ch = 10
+                }
+                if nxt == 116 {
+                    ch = 9
+                }
+                if nxt == 114 {
+                    ch = 13
+                }
+                if nxt == 48 {
+                    ch = 0
+                }
+                if nxt == 92 {
+                    ch = 92
+                }
+                if nxt == 34 {
+                    ch = 34
+                }
+                piece = l_llvm_esc_byte(ch, q)
+                if eq(piece, slice(src, 0, 0)) {
+                    piece = slice(src, k + 1, k + 2)
+                }
+                out = concat(out, piece)
+                k = k + 2
+            } else {
+                out = concat(out, "\\\\")
+                k = k + 1
+            }
+        } else {
+            b0 = byte(src, k)
+            piece = l_llvm_esc_byte(b0, q)
+            if eq(piece, slice(src, 0, 0)) {
+                piece = slice(src, k, k + 1)
+            }
+            out = concat(out, piece)
+            k = k + 1
+        }
+    }
+    out
+}
+
+fn l_intern_span(src: text, a: int, b: int, sink: text, q: text) {
+    ln = l_decoded_len(src, a, b) + 1
+    esc = l_llvm_esc_span(src, a, b, q)
+    g = concat("@.s{a} = private unnamed_addr constant [{ln} x i8] c", q)
+    g = concat(g, esc)
+    g = concat(g, "\\00")
+    g = concat(g, q)
+    l_emit(sink, g)
+    done = 1
+}
+
+fn l_str_skip_esc(src: text, i: int, n: int) -> int {
+    if byte(src, i) == 92 {
+        if i + 1 < n {
+            return i + 2
+        }
+    }
+    i + 1
+}
+
+fn l_str(src: text, idx: int, n: int, sink: text, ptxt: text) -> int {
+    i = idx + 1
+    s = i
+    step = 0
+    lastw = 0
+    while i < n {
+        if byte(src, i) == 34 {
+            if s < i {
+                ln = l_decoded_len(src, s, i) + 1
+                if step == 0 {
+                    l_emit(sink, "  %p{idx} = getelementptr [{ln} x i8], [{ln} x i8]* @.s{s}, i32 0, i32 0")
+                    done = 1
+                } else {
+                    l_emit(sink, "  %pt{idx}{step} = getelementptr [{ln} x i8], [{ln} x i8]* @.s{s}, i32 0, i32 0")
+                    l_emit(sink, "  %p{idx} = call i8* @buraaq_text_concat(i8* %w{idx}{lastw}, i8* %pt{idx}{step})")
+                    done = 1
+                }
+            } else {
+                if step == 0 {
+                    l_emit(sink, "  %p{idx} = getelementptr [1 x i8], [1 x i8]* @.s{s}, i32 0, i32 0")
+                    done = 1
+                } else {
+                    l_emit(sink, "  %p{idx} = bitcast i8* %w{idx}{lastw} to i8*")
+                    done = 1
+                }
+            }
+            l_emit(sink, "  %t{idx}l = add i32 0, 0")
+            return i + 1
+        }
+        if byte(src, i) == 123 {
+            if s < i {
+                ln = l_decoded_len(src, s, i) + 1
+                if step == 0 {
+                    l_emit(sink, "  %w{idx}0 = getelementptr [{ln} x i8], [{ln} x i8]* @.s{s}, i32 0, i32 0")
+                    lastw = 0
+                    step = 1
+                } else {
+                    l_emit(sink, "  %pt{idx}{step} = getelementptr [{ln} x i8], [{ln} x i8]* @.s{s}, i32 0, i32 0")
+                    l_emit(sink, "  %w{idx}{step} = call i8* @buraaq_text_concat(i8* %w{idx}{lastw}, i8* %pt{idx}{step})")
+                    lastw = step
+                    step = step + 1
+                }
+            }
+            j = i + 1
+            while j < n {
+                if byte(src, j) == 125 {
+                    nm = slice(src, i + 1, j)
+                    txt = l_bag_has(ptxt, nm)
+                    if txt {
+                        l_emit(sink, "  %pi{idx}{step} = load i8*, i8** %{nm}.p")
+                        done = 1
+                    } else {
+                        l_emit(sink, "  %ti{idx}{step} = load i32, i32* %{nm}.i")
+                        l_emit(sink, "  %pi{idx}{step} = call i8* @buraaq_i32_to_text(i32 %ti{idx}{step})")
+                        done = 1
+                    }
+                    if step == 0 {
+                        l_emit(sink, "  %w{idx}0 = bitcast i8* %pi{idx}{step} to i8*")
+                        lastw = 0
+                        step = 1
+                    } else {
+                        l_emit(sink, "  %w{idx}{step} = call i8* @buraaq_text_concat(i8* %w{idx}{lastw}, i8* %pi{idx}{step})")
+                        lastw = step
+                        step = step + 1
+                    }
+                    i = j + 1
+                    s = i
+                    break
+                }
+                j = j + 1
+            }
+        } else {
+            i = l_str_skip_esc(src, i, n)
+        }
+    }
+    i
+}
+
+fn l_prefix(src: text, idx: int, n: int, sink: text, want: int, ptxt: text) -> int {
+    i = scan_skip(src, idx, n)
+    pos = i
+    c = byte(src, i)
+    if scan_is_digit(c) {
+        e = i
+        while e < n {
+            if scan_is_digit(byte(src, e)) {
+                e = e + 1
+            } else {
+                break
+            }
+        }
+        num = slice(src, i, e)
+        l_emit(sink, "  %t{pos} = add i32 {num}, 0")
+        l_emit(sink, "  %t{pos}l = add i32 %t{pos}, 0")
+        return e
+    }
+    if c == 34 {
+        return l_str(src, i, n, sink, ptxt)
+    }
+    if c == 40 {
+        inner = scan_skip(src, i + 1, n)
+        l_or(src, inner, n, sink, want, ptxt)
+        l_paren_alias(sink, pos, inner, want)
+        return l_rparen(src, i + 1, n)
+    }
+    if scan_word_is(src, i, n, "true") {
+        l_emit(sink, "  %t{pos} = add i32 1, 0")
+        l_emit(sink, "  %t{pos}l = add i32 1, 0")
+        return i + 4
+    }
+    if scan_word_is(src, i, n, "false") {
+        l_emit(sink, "  %t{pos} = add i32 0, 0")
+        l_emit(sink, "  %t{pos}l = add i32 0, 0")
+        return i + 5
+    }
+    if scan_is_ident_start(c) {
+        e = scan_ident_end(src, i, n)
+        name = slice(src, i, e)
+        i = scan_skip(src, e, n)
+        if byte(src, i) == 40 {
+            return l_call(src, name, i, n, sink, pos, ptxt)
+        }
+        l_load(sink, name, want, pos, ptxt)
+        return e
+    }
+    return i
+}
+
+fn l_call(src: text, name: text, idx: int, n: int, sink: text, pos: int, ptxt: text) -> int {
+    i = scan_skip(src, idx, n)
+    if byte(src, i) == 40 {
+        i = i + 1
+    }
+    alist = ""
+    a0 = "0"
+    a1 = "0"
+    na = 0
+    hops = 0
+    i = scan_skip(src, i, n)
+    while i < n {
+        hops = hops + 1
+        if hops > 64 {
+            break
+        }
+        if byte(src, i) == 41 {
+            break
+        }
+        if na > 0 {
+            if byte(src, i) == 44 {
+                i = scan_skip(src, i + 1, n)
+            } else {
+                break
+            }
+        }
+        w = l_peek_want(src, i, n, ptxt)
+        aspos = i
+        i = l_or(src, i, n, sink, w, ptxt)
+        aval = l_val(w, l_arg_slot(src, aspos, i, w, n))
+        aty = "i32"
+        if w == 2 {
+            aty = "i8*"
+        }
+        piece = concat(aty, concat(" ", aval))
+        if na == 0 {
+            alist = piece
+            a0 = aval
+            done = 1
+        }
+        if na == 1 {
+            a1 = aval
+            done = 1
+        }
+        if na > 0 {
+            alist = concat(alist, concat(", ", piece))
+        }
+        na = na + 1
+        i = scan_skip(src, i, n)
+    }
+    if byte(src, i) == 41 {
+        i = i + 1
+    }
+    rt = l_rt(name)
+    did = 0
+    if eq(name, "print") {
+        l_emit(sink, "  call void @buraaq_print_i32(i32 {a0})")
+        l_emit(sink, "  %t{pos} = add i32 0, 0")
+        did = 1
+    }
+    if eq(name, "println") {
+        l_emit(sink, "  call void @buraaq_print_str_ln(i8* {a0})")
+        l_emit(sink, "  %t{pos} = add i32 0, 0")
+        did = 1
+    }
+    if eq(name, "eq") {
+        l_emit(sink, "  %eq{pos} = call i32 @buraaq_text_eq(i8* {a0}, i8* {a1})")
+        l_emit(sink, "  %eqc{pos} = icmp eq i32 %eq{pos}, 0")
+        l_emit(sink, "  %t{pos} = zext i1 %eqc{pos} to i32")
+        did = 1
+    }
+    cal = name
+    if eq(name, "read") {
+        cal = "buraaq_file_read"
+    }
+    if eq(name, "len") {
+        cal = "buraaq_text_len"
+    }
+    if eq(name, "byte") {
+        cal = "buraaq_text_byte"
+    }
+    if eq(name, "slice") {
+        cal = "buraaq_text_slice"
+    }
+    if eq(name, "concat") {
+        cal = "buraaq_text_concat"
+    }
+    if eq(name, "write") {
+        cal = "buraaq_file_write"
+    }
+    if eq(name, "arg") {
+        cal = "buraaq_os_argv"
+    }
+    if eq(name, "args") {
+        cal = "buraaq_os_argc"
+    }
+    ty = "i32"
+    dst = "%t{pos}"
+    if rt == 2 {
+        ty = "i8*"
+        dst = "%p{pos}"
+    }
+    if did == 0 {
+        l_emit_call(sink, cal, ty, dst, rt, alist)
+        did = 1
+    }
+    if rt == 1 {
+        l_emit(sink, "  %t{pos}l = add i32 %t{pos}, 0")
+        done = 1
+    }
+    if rt == 0 {
+        l_emit(sink, "  %t{pos}l = add i32 0, 0")
+        done = 1
+    }
+    if rt == 2 {
+        l_emit(sink, "  %t{pos}l = add i32 0, 0")
+        done = 1
+    }
+    return i
+}
+
+fn l_emit_call(sink: text, cal: text, ty: text, dst: text, rt: int, alist: text) {
+    if rt == 0 {
+        l_emit(sink, "  call void @{cal}({alist})")
+        done = 1
+    }
+    if rt == 1 {
+        l_emit(sink, "  {dst} = call {ty} @{cal}({alist})")
+        done = 1
+    }
+    if rt == 2 {
+        l_emit(sink, "  {dst} = call {ty} @{cal}({alist})")
+        done = 1
+    }
+    done = 1
+}
+
+fn l_seta(sink: text, pos: int, kindt: int, cur: int) {
+    if kindt == 1 {
+        l_emit(sink, "  %t{pos}a = add i32 %and{cur}, 0")
+        done = 1
+    }
+    if kindt == 0 {
+        l_emit(sink, "  %t{pos}a = add i32 %t{pos}q, 0")
+        done = 1
+    }
+    done = 1
+}
+
+fn l_setc(sink: text, pos: int, kindt: int, cur: int) {
+    if kindt == 1 {
+        l_emit(sink, "  %t{pos}c = add i32 %or{cur}, 0")
+        done = 1
+    }
+    if kindt == 0 {
+        l_emit(sink, "  %t{pos}c = add i32 %t{pos}a, 0")
+        done = 1
+    }
+    done = 1
+}
+
+fn l_add(src: text, idx: int, n: int, sink: text, ptxt: text) -> int {
+    pos = idx
+    i = l_prefix(src, idx, n, sink, 1, ptxt)
+    acc = scan_skip(src, idx, n)
+    hops = 0
+    while i < n {
+        hops = hops + 1
+        if hops > 32 {
+            break
+        }
+        i = scan_skip(src, i, n)
+        c = byte(src, i)
+        op = "_"
+        if c == 43 {
+            op = "add"
+        }
+        if c == 45 {
+            op = "sub"
+        }
+        if c == 42 {
+            op = "mul"
+        }
+        if c == 47 {
+            op = "sdiv"
+        }
+        if c == 37 {
+            op = "srem"
+        }
+        if eq(op, "_") {
+            break
+        }
+        plus = i
+        rpos = scan_skip(src, i + 1, n)
+        i = l_prefix(src, rpos, n, sink, 1, ptxt)
+        rp = scan_skip(src, rpos, n)
+        l_emit(sink, "  %t{plus} = {op} i32 %t{acc}l, %t{rp}l")
+        l_emit(sink, "  %t{plus}l = add i32 %t{plus}, 0")
+        acc = plus
+        i = scan_skip(src, i, n)
+    }
+    return i
+}
+
+fn l_cmp(src: text, idx: int, n: int, sink: text, ptxt: text) -> int {
+    pos = idx
+    i = l_add(src, idx, n, sink, ptxt)
+    i = scan_skip(src, i, n)
+    c = byte(src, i)
+    nxt = byte(src, i + 1)
+    pred = "_"
+    step = 0
+    if c == 61 {
+        if nxt == 61 {
+            pred = "eq"
+            step = 2
+        }
+        done = 1
+    }
+    if c == 33 {
+        if nxt == 61 {
+            pred = "ne"
+            step = 2
+        }
+        done = 1
+    }
+    if c == 62 {
+        pred = "sgt"
+        step = 1
+        if nxt == 61 {
+            pred = "sge"
+            step = 2
+        }
+        done = 1
+    }
+    if c == 60 {
+        pred = "slt"
+        step = 1
+        if nxt == 61 {
+            pred = "sle"
+            step = 2
+        }
+        done = 1
+    }
+    if step == 0 {
+        accp = scan_skip(src, idx, n)
+        l_emit(sink, "  %t{pos}q = add i32 %t{accp}l, 0")
+        return i
+    }
+    rpos = i + step
+    i = l_add(src, rpos, n, sink, ptxt)
+    lp = l_arg_slot(src, scan_skip(src, idx, n), rpos, 1, n)
+    rp = l_arg_slot(src, scan_skip(src, rpos, n), i, 1, n)
+    l_emit(sink, "  %cm{pos} = icmp {pred} i32 %t{lp}l, %t{rp}l")
+    l_emit(sink, "  %t{pos}q = zext i1 %cm{pos} to i32")
+    return i
+}
+
+fn l_and(src: text, idx: int, n: int, sink: text, ptxt: text) -> int {
+    pos = idx
+    i = l_cmp(src, idx, n, sink, ptxt)
+    i = scan_skip(src, i, n)
+    accp = scan_skip(src, idx, n)
+    kindt = 0
+    cur = accp
+    while byte(src, i) == 38 {
+        if byte(src, i + 1) != 38 {
+            break
+        }
+        rpos = scan_skip(src, i + 2, n)
+        i = l_cmp(src, rpos, n, sink, ptxt)
+        rp = scan_skip(src, rpos, n)
+        left = "%t{cur}q"
+        if kindt == 1 {
+            left = "%and{cur}"
+        }
+        l_emit(sink, "  %and{i} = and i32 {left}, %t{rp}q")
+        cur = i
+        kindt = 1
+        oldand = rpos
+        i = scan_skip(src, i, n)
+        if oldand > i {
+            break
+        }
+        if i == oldand {
+            break
+        }
+    }
+    l_seta(sink, pos, kindt, cur)
+    return i
+}
+
+fn l_or(src: text, idx: int, n: int, sink: text, want: int, ptxt: text) -> int {
+    pos = idx
+    if want == 2 {
+        return l_prefix(src, idx, n, sink, 2, ptxt)
+    }
+    i = l_and(src, idx, n, sink, ptxt)
+    i = scan_skip(src, i, n)
+    accp = scan_skip(src, idx, n)
+    kindt = 0
+    cur = accp
+    while byte(src, i) == 124 {
+        if byte(src, i + 1) != 124 {
+            break
+        }
+        rpos = scan_skip(src, i + 2, n)
+        i = l_and(src, rpos, n, sink, ptxt)
+        rp = scan_skip(src, rpos, n)
+        left = "%t{cur}a"
+        if kindt == 1 {
+            left = "%or{cur}"
+        }
+        l_emit(sink, "  %or{i} = or i32 {left}, %t{rp}a")
+        cur = i
+        kindt = 1
+        oldor = rpos
+        i = scan_skip(src, i, n)
+        if oldor > i {
+            break
+        }
+        if i == oldor {
+            break
+        }
+    }
+    l_setc(sink, pos, kindt, cur)
+    return i
+}
+
+fn l_local(sink: text, nm: text) {
+    l_emit(sink, "  %{nm}.i = alloca i32")
+    l_emit(sink, "  %{nm}.p = alloca i8*")
+    done = 1
+}
+
+fn l_need_local(sink: text, seen: text, nm: text) -> text {
+    hit = 0
+    if l_bag_has(seen, nm) {
+        hit = 1
+    }
+    if hit == 0 {
+        l_local(sink, nm)
+        seen = concat(seen, concat(nm, ","))
+    }
+    seen
+}
+
+fn l_maybe_local(sink: text, pall: text, nm: text) {
+    l_need_local(sink, pall, nm)
+    done = 1
+}
+
+fn l_seed_locals(sink: text, pall: text) -> text {
+    seen = pall
+    seen = l_need_local(sink, seen, "c")
+    seen = l_need_local(sink, seen, "i")
+    seen = l_need_local(sink, seen, "n")
+    seen = l_need_local(sink, seen, "idx")
+    seen = l_need_local(sink, seen, "nxt")
+    seen = l_need_local(sink, seen, "start")
+    seen = l_need_local(sink, seen, "end")
+    seen = l_need_local(sink, seen, "ch")
+    seen = l_need_local(sink, seen, "e")
+    seen = l_need_local(sink, seen, "k")
+    seen = l_need_local(sink, seen, "src")
+    seen = l_need_local(sink, seen, "path")
+    seen = l_need_local(sink, seen, "name")
+    seen = l_need_local(sink, seen, "kind")
+    seen = l_need_local(sink, seen, "w")
+    seen = l_need_local(sink, seen, "done")
+    seen = l_need_local(sink, seen, "ln")
+    seen = l_need_local(sink, seen, "s")
+    seen = l_need_local(sink, seen, "g")
+    seen = l_need_local(sink, seen, "q")
+    seen
+}
+
+fn l_prescan(src: text, idx: int, n: int, sink: text, pall: text) -> int {
+    i = idx
+    d = 0
+    seen = concat(",", pall)
+    while i < n {
+        c = byte(src, i)
+        step = 1
+        go = 1
+        if c == 35 {
+            while i < n {
+                if byte(src, i) == 10 {
+                    i = i + 1
+                    break
+                }
+                i = i + 1
+            }
+            go = 0
+            step = 0
+            done = 1
+        }
+        if c == 34 {
+            if go == 1 {
+                i = i + 1
+                while i < n {
+                    if byte(src, i) == 34 {
+                        i = i + 1
+                        break
+                    }
+                    if byte(src, i) == 92 {
+                        if i + 1 < n {
+                            i = i + 2
+                        } else {
+                            i = i + 1
+                        }
+                    } else {
+                        i = i + 1
+                    }
+                }
+                go = 0
+                step = 0
+            }
+            done = 1
+        }
+        if go == 1 {
+            if c == 123 {
+                d = d + 1
+                done = 1
+            }
+            if c == 125 {
+                d = d - 1
+                done = 1
+            }
+            if c == 125 {
+                if d == 0 {
+                    return i + 1
+                }
+                done = 1
+            }
+            if scan_is_ident_start(c) {
+                e = scan_ident_end(src, i, n)
+                j = scan_skip(src, e, n)
+                isas = 0
+                if byte(src, j) == 61 {
+                    if byte(src, j + 1) != 61 {
+                        isas = 1
+                    }
+                    done = 1
+                }
+                if isas == 1 {
+                    nm = slice(src, i, e)
+                    seen = l_need_local(sink, seen, nm)
+                    done = 1
+                }
+                if e == i {
+                    e = i + 1
+                }
+                i = e
+                step = 0
+                done = 1
+            }
+            done = 1
+        }
+        i = i + step
+    }
+    i
+}
+
+fn l_if(src: text, idx: int, n: int, sink: text, rty: int, wend: int, ptxt: text, kw: int) -> int {
+    pos = idx
+    i = scan_skip(src, idx + kw, n)
+    cpos = i
+    i = l_or(src, i, n, sink, 1, ptxt)
+    l_emit(sink, "  %k{pos} = icmp ne i32 %t{cpos}c, 0")
+    l_emit(sink, "  br i1 %k{pos}, label %then_{pos}, label %nxt_{pos}")
+    l_emit(sink, "then_{pos}:")
+    i = l_block(src, i, n, sink, rty, wend, pos, ptxt, 0)
+    l_emit(sink, "nxt_{pos}:")
+    i = scan_skip(src, i, n)
+    is_el = 0
+    if scan_word_is(src, i, n, "elif") {
+        is_el = 1
+    }
+    is_es = 0
+    if scan_word_is(src, i, n, "else") {
+        is_es = 1
+    }
+    need_br = 1
+    if is_el == 1 {
+        i = l_if(src, i, n, sink, rty, wend, ptxt, 4)
+        need_br = 1
+        done = 1
+    }
+    if is_es == 1 {
+        i = scan_skip(src, i + 4, n)
+        i = l_block(src, i, n, sink, rty, wend, pos, ptxt, 0)
+        need_br = 0
+        done = 1
+    }
+    if need_br == 1 {
+        l_emit(sink, "  br label %j_{pos}")
+        done = 1
+    }
+    l_emit(sink, "j_{pos}:")
+    return i
+}
+
+fn l_while(src: text, idx: int, n: int, sink: text, rty: int, ptxt: text) -> int {
+    pos = idx
+    l_emit(sink, "  br label %wh_{pos}")
+    l_emit(sink, "wh_{pos}:")
+    i = scan_skip(src, idx + 5, n)
+    cpos = i
+    i = l_or(src, i, n, sink, 1, ptxt)
+    l_emit(sink, "  %wk{pos} = icmp ne i32 %t{cpos}c, 0")
+    l_emit(sink, "  br i1 %wk{pos}, label %wb_{pos}, label %we_{pos}")
+    l_emit(sink, "wb_{pos}:")
+    i = l_block(src, i, n, sink, rty, pos, 0, ptxt, 0)
+    l_emit(sink, "we_{pos}:")
+    return i
+}
+
+fn l_close_block(sink: text, rty: int, wend: int, join: int, top: int, last: int, retflag: int) {
+    if top == 1 {
+        l_close_top(sink, rty, last)
+        done = 1
+    }
+    if top == 0 {
+        if retflag == 0 {
+            l_close_join(sink, join, wend)
+            done = 1
+        }
+        done = 1
+    }
+    done = 1
+}
+
+fn l_close_top(sink: text, rty: int, last: int) {
+    if rty == 1 {
+        if last > 0 {
+            l_emit(sink, "  ret i32 %t{last}l")
+            done = 1
+        }
+        if last == 0 {
+            l_emit(sink, "  ret i32 0")
+            done = 1
+        }
+        done = 1
+    }
+    if rty == 2 {
+        if last > 0 {
+            l_emit(sink, "  ret i8* %p{last}")
+            done = 1
+        }
+        if last == 0 {
+            l_emit(sink, "  ret i8* null")
+            done = 1
+        }
+        done = 1
+    }
+    if rty == 4 {
+        if last > 0 {
+            l_emit(sink, "  ret i32 %t{last}c")
+            done = 1
+        }
+        if last == 0 {
+            l_emit(sink, "  ret i32 0")
+            done = 1
+        }
+        done = 1
+    }
+    if rty == 3 {
+        l_emit(sink, "  ret void")
+        done = 1
+    }
+    if rty == 0 {
+        l_emit(sink, "  ret void")
+        done = 1
+    }
+    done = 1
+}
+
+fn l_close_join(sink: text, join: int, wend: int) {
+    if join > 0 {
+        l_emit(sink, "  br label %j_{join}")
+        done = 1
+    }
+    if join == 0 {
+        if wend > 0 {
+            l_emit(sink, "  br label %wh_{wend}")
+            done = 1
+        }
+        done = 1
+    }
+    done = 1
+}
+
+fn l_emit_return(src: text, i: int, n: int, sink: text, rty: int, ptxt: text) -> int {
+    i = scan_skip(src, i, n)
+    if byte(src, i) == 125 {
+        l_close_top(sink, rty, 0)
+        return i
+    }
+    epos = i
+    if rty == 2 {
+        i = l_or(src, i, n, sink, 2, ptxt)
+        l_emit(sink, "  ret i8* %p{epos}")
+        done = 1
+    }
+    if rty == 1 {
+        i = l_or(src, i, n, sink, 1, ptxt)
+        rp = epos
+        cal = l_is_call(src, epos, n)
+        if cal == 0 {
+            rp = l_plus_in(src, epos, i)
+        }
+        l_emit(sink, "  ret i32 %t{rp}l")
+        done = 1
+    }
+    if rty == 4 {
+        i = l_or(src, i, n, sink, 1, ptxt)
+        rp = l_plus_in(src, epos, i)
+        l_emit(sink, "  ret i32 %t{rp}c")
+        done = 1
+    }
+    if rty == 0 {
+        i = l_or(src, i, n, sink, 1, ptxt)
+        l_emit(sink, "  ret void")
+        done = 1
+    }
+    if rty == 3 {
+        i = l_or(src, i, n, sink, 1, ptxt)
+        l_emit(sink, "  ret void")
+        done = 1
+    }
+    return i
+}
+
+fn l_stmt_expr(src: text, i: int, n: int, sink: text, ptxt: text, swant: int) -> int {
+    e = scan_ident_end(src, i, n)
+    j = scan_skip(src, e, n)
+    epos = i
+    if scan_is_ident_start(byte(src, i)) {
+        if byte(src, j) == 61 {
+            if byte(src, j + 1) != 61 {
+                nm = slice(src, i, e)
+                i = scan_skip(src, j + 1, n)
+                epos = i
+                want = 1
+                if byte(src, i) == 34 {
+                    want = 2
+                }
+                if scan_word_is(src, i, n, "read") {
+                    want = 2
+                }
+                if scan_word_is(src, i, n, "slice") {
+                    want = 2
+                }
+                if scan_word_is(src, i, n, "arg") {
+                    want = 2
+                }
+                if scan_word_is(src, i, n, "concat") {
+                    want = 2
+                }
+                if scan_word_is(src, i, n, "classify_word") {
+                    want = 2
+                }
+                i = l_or(src, i, n, sink, want, ptxt)
+                plus = epos
+                k = epos
+                while k < i {
+                    c = byte(src, k)
+                    if c == 43 {
+                        plus = k
+                    }
+                    if c == 45 {
+                        plus = k
+                    }
+                    if c == 42 {
+                        plus = k
+                    }
+                    if c == 47 {
+                        plus = k
+                    }
+                    if c == 37 {
+                        plus = k
+                    }
+                    k = k + 1
+                }
+                if want == 2 {
+                    l_emit(sink, "  store i8* %p{epos}, i8** %{nm}.p")
+                    done = 1
+                }
+                if want == 1 {
+                    sp = plus
+                    cal = l_is_call(src, epos, n)
+                    if cal == 1 {
+                        sp = epos
+                    }
+                    l_emit(sink, "  store i32 %t{sp}l, i32* %{nm}.i")
+                    done = 1
+                }
+                return i
+            }
+            done = 1
+        }
+        done = 1
+    }
+    i = l_or(src, i, n, sink, swant, ptxt)
+    return i
+}
+
+fn l_block(src: text, idx: int, n: int, sink: text, rty: int, wend: int, join: int, ptxt: text, top: int) -> int {
+    i = scan_skip(src, idx, n)
+    if byte(src, i) == 123 {
+        i = i + 1
+    }
+    i = scan_skip(src, i, n)
+    last = 0
+    retflag = 0
+    hops = 0
+    while i < n {
+        hops = hops + 1
+        if hops > n + n + n + 8 {
+            break
+        }
+        if byte(src, i) == 125 {
+            l_close_block(sink, rty, wend, join, top, last, retflag)
+            return i + 1
+        }
+        oldi = i
+        kind = 0
+        if scan_word_is(src, i, n, "if") {
+            kind = 1
+        }
+        if scan_word_is(src, i, n, "while") {
+            kind = 2
+        }
+        if scan_word_is(src, i, n, "break") {
+            kind = 3
+        }
+        if scan_word_is(src, i, n, "return") {
+            kind = 4
+        }
+        if kind == 1 {
+            i = l_if(src, i, n, sink, rty, wend, ptxt, 2)
+            last = 0
+            retflag = 0
+            done = 1
+        }
+        if kind == 2 {
+            i = l_while(src, i, n, sink, rty, ptxt)
+            last = 0
+            retflag = 0
+            done = 1
+        }
+        if kind == 3 {
+            l_emit(sink, "  br label %we_{wend}")
+            i = i + 5
+            last = 0
+            retflag = 1
+            done = 1
+        }
+        if kind == 4 {
+            i = l_emit_return(src, i + 6, n, sink, rty, ptxt)
+            last = 0
+            retflag = 1
+            done = 1
+        }
+        if kind == 0 {
+            last = i
+            swant = 1
+            if rty == 2 {
+                swant = 2
+            }
+            k = i
+            i = l_stmt_expr(src, i, n, sink, ptxt, swant)
+            while k < i {
+                if byte(src, k) == 43 {
+                    last = k
+                }
+                k = k + 1
+            }
+            retflag = 0
+            done = 1
+        }
+        i = scan_skip(src, i, n)
+        if oldi > i {
+            i = oldi + 1
+        }
+        if i == oldi {
+            i = oldi + 1
+        }
+    }
+    return i
+}
+
+fn l_spill(sink: text, name: text, t: int) {
+    l_local(sink, name)
+    if t == 2 {
+        l_emit(sink, "  store i8* %{name}, i8** %{name}.p")
+        done = 1
+    }
+    if t == 1 {
+        l_emit(sink, "  store i32 %{name}, i32* %{name}.i")
+        done = 1
+    }
+    done = 1
+}
+
+fn l_spill_params(sink: text, pall: text, ptxt: text) {
+    i = 0
+    n = len(pall)
+    hops = 0
+    while i < n {
+        hops = hops + 1
+        if hops > n + 8 {
+            break
+        }
+        c = byte(pall, i)
+        if scan_is_ident_start(c) {
+            e = scan_ident_end(pall, i, n)
+            nm = slice(pall, i, e)
+            t = 1
+            if l_bag_has(ptxt, nm) {
+                t = 2
+            }
+            l_spill(sink, nm, t)
+            i = e
+        } else {
+            i = i + 1
+        }
+    }
+    done = 1
+}
+
+fn l_fn(src: text, idx: int, n: int, sink: text) -> int {
+    i = idx
+    if scan_word_is(src, i, n, "pub") {
+        i = scan_skip(src, i + 3, n)
+    }
+    i = scan_skip(src, i, n)
+    if scan_word_is(src, i, n, "fn") {
+        i = scan_skip(src, i + 2, n)
+    }
+    e = scan_ident_end(src, i, n)
+    fname = slice(src, i, e)
+    i = scan_skip(src, e, n)
+    if byte(src, i) == 40 {
+        i = i + 1
+    }
+    ptxt = ","
+    pall = ","
+    plist = ""
+    np = 0
+    i = scan_skip(src, i, n)
+    while i < n {
+        if byte(src, i) == 41 {
+            i = i + 1
+            break
+        }
+        e = scan_ident_end(src, i, n)
+        if e == i {
+            i = i + 1
+        } else {
+            pname = slice(src, i, e)
+            pall = concat(pall, concat(pname, ","))
+            i = scan_skip(src, e, n)
+            pty = "i32"
+            if byte(src, i) == 58 {
+                i = scan_skip(src, i + 1, n)
+                te = scan_ident_end(src, i, n)
+                tn = slice(src, i, te)
+                i = te
+                if eq(tn, "text") {
+                    pty = "i8*"
+                    ptxt = concat(ptxt, concat(pname, ","))
+                }
+                done = 1
+            }
+            piece = concat(pty, concat(" %", pname))
+            if np == 0 {
+                plist = piece
+                done = 1
+            }
+            if np > 0 {
+                plist = concat(plist, concat(", ", piece))
+                done = 1
+            }
+            np = np + 1
+            i = scan_skip(src, i, n)
+            if byte(src, i) == 44 {
+                i = scan_skip(src, i + 1, n)
+            }
+            done = 1
+        }
+    }
+    i = scan_skip(src, i, n)
+    rty = 0
+    rtyt = "void"
+    if byte(src, i) == 45 {
+        if byte(src, i + 1) == 62 {
+            i = scan_skip(src, i + 2, n)
+            te = scan_ident_end(src, i, n)
+            tn = slice(src, i, te)
+            i = te
+            if eq(tn, "text") {
+                rty = 2
+                rtyt = "i8*"
+                done = 1
+            }
+            if eq(tn, "bool") {
+                rty = 4
+                rtyt = "i32"
+                done = 1
+            }
+            if eq(tn, "int") {
+                rty = 1
+                rtyt = "i32"
+                done = 1
+            }
+            done = 1
+        }
+        done = 1
+    }
+    is_main = 0
+    iname = fname
+    if eq(fname, "main") {
+        is_main = 1
+        iname = "buraaq_main"
+        rty = 3
+        rtyt = "void"
+    }
+    done = 1
+    def = concat("define {rtyt} @{iname}({plist}) ", l_open(src, n))
+    l_emit(sink, def)
+    l_emit(sink, "entry:")
+    l_spill_params(sink, pall, ptxt)
+    i = scan_skip(src, i, n)
+    seen = l_seed_locals(sink, pall)
+    l_prescan(src, i, n, sink, seen)
+    i = l_block(src, i, n, sink, rty, 0, 0, ptxt, 1)
+    l_emit(sink, l_close(src, n))
+    if is_main == 1 {
+        l_emit(sink, concat("define i32 @main(i32 %argc, i8** %argv) ", l_open(src, n)))
+        l_emit(sink, "entry:")
+        l_emit(sink, "  call void @buraaq_rt_set_args(i32 %argc, i8** %argv)")
+        l_emit(sink, "  call void @buraaq_main()")
+        l_emit(sink, "  ret i32 0")
+        l_emit(sink, l_close(src, n))
+    }
+    return i
+}
+
+fn l_emit_strings(src: text, n: int, sink: text) {
+    q = l_quote(src, n)
+    i = 0
+    while i < n {
+        if byte(src, i) == 35 {
+            while i < n {
+                if byte(src, i) == 10 {
+                    i = i + 1
+                    break
+                }
+                i = i + 1
+            }
+        } elif byte(src, i) == 34 {
+            i = i + 1
+            s = i
+            while i < n {
+                if byte(src, i) == 34 {
+                    if s <= i {
+                        l_intern_span(src, s, i, sink, q)
+                    }
+                    i = i + 1
+                    break
+                }
+                if byte(src, i) == 123 {
+                    if s < i {
+                        l_intern_span(src, s, i, sink, q)
+                    }
+                    j = i + 1
+                    while j < n {
+                        if byte(src, j) == 125 {
+                            i = j + 1
+                            s = i
+                            break
+                        }
+                        j = j + 1
+                    }
+                } else {
+                    i = l_str_skip_esc(src, i, n)
+                }
+            }
+        } else {
+            i = i + 1
+        }
+    }
+    done = 1
+}
+
+fn ll_emit_module(path: text, sink: text) {
+    src = read(path)
+    n = len(src)
+    l_emit(sink, "; buraaq-boot llvm")
+    l_emit(sink, "declare void @buraaq_print_i32(i32)")
+    l_emit(sink, "declare void @buraaq_print_str_ln(i8*)")
+    l_emit(sink, "declare i8* @buraaq_file_read(i8*)")
+    l_emit(sink, "declare i32 @buraaq_file_write(i8*, i8*)")
+    l_emit(sink, "declare i32 @buraaq_text_len(i8*)")
+    l_emit(sink, "declare i32 @buraaq_text_byte(i8*, i32)")
+    l_emit(sink, "declare i32 @buraaq_text_eq(i8*, i8*)")
+    l_emit(sink, "declare i8* @buraaq_text_slice(i8*, i32, i32)")
+    l_emit(sink, "declare i8* @buraaq_text_concat(i8*, i8*)")
+    l_emit(sink, "declare i8* @buraaq_i32_to_text(i32)")
+    l_emit(sink, "declare i8* @buraaq_os_argv(i32)")
+    l_emit(sink, "declare i32 @buraaq_os_argc()")
+    l_emit(sink, "declare void @buraaq_rt_set_args(i32, i8**)")
+    l_emit_strings(src, n, sink)
+    i = scan_skip(src, 0, n)
+    steps = 0
+    while i < n {
+        steps = steps + 1
+        if steps > n + n + n + 8 {
+            break
+        }
+        old = i
+        if scan_word_is(src, i, n, "pub") {
+            i = l_fn(src, i, n, sink)
+        } elif scan_word_is(src, i, n, "fn") {
+            i = l_fn(src, i, n, sink)
+        } elif scan_word_is(src, i, n, "use") {
+            while i < n {
+                if byte(src, i) == 10 {
+                    i = i + 1
+                    break
+                }
+                i = i + 1
+            }
+        } else {
+            i = i + 1
+        }
+        if old > i {
+            i = old + 1
+        }
+        if i == old {
+            i = old + 1
+        }
+        i = scan_skip(src, i, n)
+    }
+    done = 1
+}
+
+pub fn dump_llvm(path: text) {
+    ll_emit_module(path, "-")
+}
+
+pub fn build_file(src: text, exe: text, rt: text, clang: text) {
+    ll = concat(exe, ".ll")
+    write(ll, "")
+    ll_emit_module(src, ll)
+    line = concat(clang, " -Wno-override-module -O0 -fuse-ld=lld -o ")
+    line = concat(line, exe)
+    line = concat(line, " ")
+    line = concat(line, ll)
+    line = concat(line, " ")
+    line = concat(line, rt)
+    println(line)
+}

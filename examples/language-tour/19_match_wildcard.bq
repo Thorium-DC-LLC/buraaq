@@ -1,0 +1,13 @@
+﻿# 19 — match wildcard
+enum OptionColor {
+    Named(text),
+    Anonymous,
+}
+
+fn main() {
+    c = OptionColor.Named("crimson")
+    match c {
+        .Named(n) => print(n),
+        _ => print("unknown"),
+    }
+}

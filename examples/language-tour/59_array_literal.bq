@@ -1,0 +1,6 @@
+﻿# 59 — array literal and indexing
+fn main() {
+    nums = [10, 20, 30, 40]
+    print(nums[0].to_text())
+    print(nums.len().to_text())
+}

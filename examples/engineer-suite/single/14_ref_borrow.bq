@@ -1,0 +1,12 @@
+# ref / ref mut — deref with value[]
+use std.io.println
+
+fn increment(ref mut value: int) {
+    value[] = value[] + 1
+}
+
+fn main() {
+    mut n = 41
+    increment(ref mut n)
+    println(n.to_text())
+}

@@ -1,0 +1,14 @@
+﻿# 53 — unsafe raw pointer
+unsafe fn write_one(ptr: *mut int, value: int) {
+    if !ptr.is_null() {
+        *ptr = value
+    }
+}
+
+fn main() {
+    mut x = 0
+    unsafe {
+        write_one(&mut x as *mut int, 42)
+    }
+    print(x.to_text())
+}

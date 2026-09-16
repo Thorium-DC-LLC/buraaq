@@ -1,0 +1,8 @@
+[package]
+name = "buraaq_ast"
+description = "Abstract syntax tree for the Buraaq language"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+buraaq_source = { path = "../source" }

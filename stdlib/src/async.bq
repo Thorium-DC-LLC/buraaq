@@ -1,0 +1,24 @@
+# std.async — executor tasks (work-stealing pool)
+module std.async
+
+extern c {
+    fn buraaq_runtime_init(workers: c.int) -> void
+    fn buraaq_runtime_shutdown() -> void
+    fn buraaq_task_yield() -> void
+}
+
+pub struct Task {
+    id: int
+}
+
+pub fn runtime_start(workers: int) {
+    unsafe { buraaq_runtime_init(workers) }
+}
+
+pub fn runtime_stop() {
+    unsafe { buraaq_runtime_shutdown() }
+}
+
+pub fn yield_now() {
+    unsafe { buraaq_task_yield() }
+}

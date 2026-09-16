@@ -1,0 +1,7 @@
+﻿# 35 — string literal
+fn main() {
+    greeting = "Hello, Buraaq"
+    empty = ""
+    escaped = "line1\nline2"
+    print(greeting)
+}

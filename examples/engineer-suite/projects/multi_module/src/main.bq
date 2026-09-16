@@ -1,0 +1,8 @@
+module main
+
+use util.{add, mul}
+use std.io.print_int
+
+fn main() {
+    print_int(mul(add(2, 3), 4))
+}

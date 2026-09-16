@@ -1,0 +1,8 @@
+﻿# 06 — Explicit types
+fn main() {
+    id: uint = 42
+    rate: float = 1.5
+    name: text = "Buraaq"
+    flags: bool = false
+    print(name)
+}

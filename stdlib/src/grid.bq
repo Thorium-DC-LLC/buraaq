@@ -1,0 +1,58 @@
+# std.grid — numeric arrays (the Buraaq shape of NumPy)
+#
+# g = zeros(2, 2)
+# put_at(g, 0, 0, 1.5)
+# println(at(g, 0, 0))
+module std.grid
+
+extern c {
+    fn buraaq_grid_zeros(rows: c.int, cols: c.int) -> c.int
+    fn buraaq_grid_ones(rows: c.int, cols: c.int) -> c.int
+    fn buraaq_grid_fill(rows: c.int, cols: c.int, v: c.float) -> c.int
+    fn buraaq_grid_eye(n: c.int) -> c.int
+    fn buraaq_grid_linspace(a: c.float, b: c.float, n: c.int) -> c.int
+    fn buraaq_grid_row(csv: c.text) -> c.int
+    fn buraaq_grid_nrows(id: c.int) -> c.int
+    fn buraaq_grid_ncols(id: c.int) -> c.int
+    fn buraaq_grid_at(id: c.int, r: c.int, c: c.int) -> c.float
+    fn buraaq_grid_put_at(id: c.int, r: c.int, c: c.int, v: c.float) -> c.int
+    fn buraaq_grid_plus(a: c.int, b: c.int) -> c.int
+    fn buraaq_grid_times(a: c.int, b: c.int) -> c.int
+    fn buraaq_grid_scale(id: c.int, k: c.float) -> c.int
+    fn buraaq_grid_matmul(a: c.int, b: c.int) -> c.int
+    fn buraaq_grid_dot(a: c.int, b: c.int) -> c.float
+    fn buraaq_grid_transpose(id: c.int) -> c.int
+    fn buraaq_grid_sum(id: c.int) -> c.float
+    fn buraaq_grid_mean(id: c.int) -> c.float
+    fn buraaq_grid_least(id: c.int) -> c.float
+    fn buraaq_grid_most(id: c.int) -> c.float
+    fn buraaq_grid_norm(id: c.int) -> c.float
+    fn buraaq_grid_sin_all(id: c.int) -> c.int
+    fn buraaq_grid_cos_all(id: c.int) -> c.int
+    fn buraaq_grid_view(id: c.int) -> c.text
+}
+
+pub fn zeros(rows: int, cols: int) -> int { unsafe { buraaq_grid_zeros(rows, cols) } }
+pub fn ones(rows: int, cols: int) -> int { unsafe { buraaq_grid_ones(rows, cols) } }
+pub fn fill(rows: int, cols: int, v: float) -> int { unsafe { buraaq_grid_fill(rows, cols, v) } }
+pub fn eye(n: int) -> int { unsafe { buraaq_grid_eye(n) } }
+pub fn linspace(a: float, b: float, n: int) -> int { unsafe { buraaq_grid_linspace(a, b, n) } }
+pub fn row(csv: text) -> int { unsafe { buraaq_grid_row(csv.to_c()) } }
+pub fn nrows(g: int) -> int { unsafe { buraaq_grid_nrows(g) } }
+pub fn ncols(g: int) -> int { unsafe { buraaq_grid_ncols(g) } }
+pub fn at(g: int, r: int, c: int) -> float { unsafe { buraaq_grid_at(g, r, c) } }
+pub fn put_at(g: int, r: int, c: int, v: float) { unsafe { buraaq_grid_put_at(g, r, c, v) } }
+pub fn plus(a: int, b: int) -> int { unsafe { buraaq_grid_plus(a, b) } }
+pub fn times(a: int, b: int) -> int { unsafe { buraaq_grid_times(a, b) } }
+pub fn scale(g: int, k: float) -> int { unsafe { buraaq_grid_scale(g, k) } }
+pub fn matmul(a: int, b: int) -> int { unsafe { buraaq_grid_matmul(a, b) } }
+pub fn dot(a: int, b: int) -> float { unsafe { buraaq_grid_dot(a, b) } }
+pub fn transpose(g: int) -> int { unsafe { buraaq_grid_transpose(g) } }
+pub fn sum(g: int) -> float { unsafe { buraaq_grid_sum(g) } }
+pub fn mean(g: int) -> float { unsafe { buraaq_grid_mean(g) } }
+pub fn least(g: int) -> float { unsafe { buraaq_grid_least(g) } }
+pub fn most(g: int) -> float { unsafe { buraaq_grid_most(g) } }
+pub fn norm(g: int) -> float { unsafe { buraaq_grid_norm(g) } }
+pub fn sin_all(g: int) -> int { unsafe { buraaq_grid_sin_all(g) } }
+pub fn cos_all(g: int) -> int { unsafe { buraaq_grid_cos_all(g) } }
+pub fn view(g: int) -> text { unsafe { buraaq_grid_view(g) } }

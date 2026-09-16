@@ -1,0 +1,10 @@
+[package]
+name = "buraaq_ship"
+description = "Native application shipping — pack, launch, and dock Buraaq services"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+sha2 = "0.10"
+thiserror = { workspace = true }
+walkdir = "2"

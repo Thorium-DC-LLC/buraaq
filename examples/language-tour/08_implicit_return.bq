@@ -1,0 +1,8 @@
+﻿# 08 — Implicit return
+fn greet(name: text) -> text {
+    "Hello, {name}!"
+}
+
+fn main() {
+    print(greet("World"))
+}

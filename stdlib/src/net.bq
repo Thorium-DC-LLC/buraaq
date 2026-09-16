@@ -1,0 +1,31 @@
+# std.net — TCP/UDP networking
+module std.net
+
+pub struct TcpListener {
+    port: int
+
+    fn accept(self) -> TcpStream {
+        TcpStream { host: "0.0.0.0", port: self.port }
+    }
+}
+
+pub struct TcpStream {
+    host: text
+    port: int
+}
+
+pub struct UdpSocket {
+    port: int
+}
+
+pub fn listen(port: int) -> TcpListener {
+    TcpListener { port: port }
+}
+
+pub fn connect(host: text, port: int) -> TcpStream {
+    TcpStream { host: host, port: port }
+}
+
+pub fn udp_bind(port: int) -> UdpSocket {
+    UdpSocket { port: port }
+}

@@ -1,0 +1,6 @@
+﻿# 13 — if expression
+fn main() {
+    ok = true
+    label = if ok { "yes" } else { "no" }
+    print(label)
+}

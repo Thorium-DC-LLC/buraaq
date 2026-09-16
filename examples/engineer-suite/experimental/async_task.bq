@@ -1,0 +1,12 @@
+# Probe: async / await (may not lower yet)
+async fn fetch() -> int {
+    42
+}
+
+fn main() {
+    t = async {
+        fetch()
+    }
+    n = await t
+    print(n.to_text())
+}

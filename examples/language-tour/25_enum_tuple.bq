@@ -1,0 +1,15 @@
+﻿# 25 — enum tuple variants (tagged union)
+enum Value {
+    Int(int),
+    Text(text),
+    Empty,
+}
+
+fn main() {
+    v = Value.Int(42)
+    match v {
+        .Int(n) => print(n.to_text()),
+        .Text(s) => print(s),
+        .Empty => print("empty"),
+    }
+}

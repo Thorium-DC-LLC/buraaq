@@ -1,0 +1,18 @@
+﻿# 23 — struct methods
+struct Counter {
+    value: int
+
+    fn inc(mut self) {
+        self.value = self.value + 1
+    }
+
+    fn get(self) -> int {
+        self.value
+    }
+}
+
+fn main() {
+    mut c = Counter { value: 0 }
+    c.inc()
+    print(c.get().to_text())
+}

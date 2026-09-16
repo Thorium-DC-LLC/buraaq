@@ -1,0 +1,7 @@
+﻿# 36 — string interpolation
+fn main() {
+    name = "Asim"
+    age = 30
+    msg = "Hello, {name}! Age: {age}"
+    print(msg)
+}

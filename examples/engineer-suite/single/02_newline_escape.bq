@@ -1,0 +1,6 @@
+# String escapes — \n must lex and codegen as one byte
+use std.io.println
+
+fn main() {
+    println("line1\nline2")
+}

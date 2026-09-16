@@ -1,0 +1,186 @@
+# M3 bootstrap lexer — token kinds match Rust `buraaq_lexer`
+use std.fs.read
+use std.io.println
+use std.text.byte
+use std.text.len
+use std.text.eq
+use std.text.slice
+
+fn is_ws(c: int) -> bool {
+    c == 32 || c == 9 || c == 10 || c == 13
+}
+
+fn is_ident_start(c: int) -> bool {
+    (c >= 65 && c <= 90) || (c >= 97 && c <= 122) || c == 95
+}
+
+fn is_ident_cont(c: int) -> bool {
+    is_ident_start(c) || (c >= 48 && c <= 57)
+}
+
+fn is_digit(c: int) -> bool {
+    c >= 48 && c <= 57
+}
+
+fn emit_kind(kind: text) {
+    println(kind)
+}
+
+fn classify_word(src: text, start: int, end: int) -> text {
+    if eq(slice(src, start, end), "fn") {
+        return "Fn"
+    }
+    if eq(slice(src, start, end), "if") {
+        return "If"
+    }
+    if eq(slice(src, start, end), "return") {
+        return "Return"
+    }
+    if eq(slice(src, start, end), "else") {
+        return "Else"
+    }
+    if eq(slice(src, start, end), "elif") {
+        return "Elif"
+    }
+    if eq(slice(src, start, end), "while") {
+        return "While"
+    }
+    if eq(slice(src, start, end), "pub") {
+        return "Pub"
+    }
+    if eq(slice(src, start, end), "use") {
+        return "Use"
+    }
+    if eq(slice(src, start, end), "mut") {
+        return "Mut"
+    }
+    if eq(slice(src, start, end), "struct") {
+        return "Struct"
+    }
+    "Ident"
+}
+
+pub fn lex_file(path: text) {
+    src = read(path)
+    n = len(src)
+    idx = 0
+    while idx < n {
+        c = byte(src, idx)
+        nxt = byte(src, idx + 1)
+        if is_ws(c) {
+            idx = idx + 1
+        } elif c == 35 {
+            while idx < n {
+                if byte(src, idx) == 10 {
+                    idx = idx + 1
+                    break
+                }
+                idx = idx + 1
+            }
+        } elif is_ident_start(c) {
+            start = idx
+            idx = idx + 1
+            while idx < n {
+                ch = byte(src, idx)
+                if is_ident_cont(ch) {
+                    idx = idx + 1
+                } else {
+                    break
+                }
+            }
+            if 1 > 0 {
+                emit_kind(classify_word(src, start, idx))
+            }
+        } elif is_digit(c) {
+            idx = idx + 1
+            while idx < n {
+                ch = byte(src, idx)
+                if is_digit(ch) || ch == 95 {
+                    idx = idx + 1
+                } else {
+                    break
+                }
+            }
+            if 1 > 0 {
+                emit_kind("Int")
+            }
+        } elif c == 34 {
+            idx = idx + 1
+            while idx < n {
+                ch = byte(src, idx)
+                if ch == 34 {
+                    idx = idx + 1
+                    break
+                }
+                idx = idx + 1
+            }
+            if 1 > 0 {
+                emit_kind("String")
+            }
+        } elif c == 40 {
+            idx = idx + 1
+            if 1 > 0 {
+                emit_kind("LParen")
+            }
+        } elif c == 41 {
+            idx = idx + 1
+            if 1 > 0 {
+                emit_kind("RParen")
+            }
+        } elif c == 123 {
+            idx = idx + 1
+            if 1 > 0 {
+                emit_kind("LBrace")
+            }
+        } elif c == 125 {
+            idx = idx + 1
+            if 1 > 0 {
+                emit_kind("RBrace")
+            }
+        } elif c == 44 {
+            idx = idx + 1
+            if 1 > 0 {
+                emit_kind("Comma")
+            }
+        } elif c == 58 {
+            idx = idx + 1
+            if 1 > 0 {
+                emit_kind("Colon")
+            }
+        } elif c == 43 {
+            idx = idx + 1
+            if 1 > 0 {
+                emit_kind("Plus")
+            }
+        } elif c == 45 {
+            if nxt == 62 {
+                idx = idx + 2
+                if 1 > 0 {
+                    emit_kind("Arrow")
+                }
+            } else {
+                idx = idx + 1
+                if 1 > 0 {
+                    emit_kind("Minus")
+                }
+            }
+        } elif c == 62 {
+            if nxt == 61 {
+                idx = idx + 2
+                if 1 > 0 {
+                    emit_kind("Ge")
+                }
+            } else {
+                idx = idx + 1
+                if 1 > 0 {
+                    emit_kind("Gt")
+                }
+            }
+        } else {
+            idx = idx + 1
+            if 1 > 0 {
+                emit_kind("Invalid")
+            }
+        }
+    }
+}

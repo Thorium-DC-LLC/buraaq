@@ -1,0 +1,26 @@
+[package]
+name = "buraaq"
+description = "Buraaq programming language compiler"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "buraaq"
+path = "src/main.rs"
+
+[dependencies]
+buraaq_codegen = { path = "../codegen" }
+buraaq_diagnostics = { path = "../diagnostics" }
+buraaq_doc = { path = "../doc" }
+buraaq_driver = { path = "../driver" }
+buraaq_fmt = { path = "../fmt" }
+buraaq_frontend = { path = "../frontend" }
+buraaq_pkg = { path = "../pkg" }
+buraaq_ship = { path = "../ship" }
+buraaq_lsp = { path = "../lsp" }
+buraaq_source = { path = "../source" }
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+
+[dev-dependencies]
+buraaq_codegen = { path = "../codegen" }
+tempfile = "3"

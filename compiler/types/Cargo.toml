@@ -1,0 +1,9 @@
+[package]
+name = "buraaq_types"
+description = "Internal type representation and inference for Buraaq"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+buraaq_ast = { path = "../ast" }
+buraaq_source = { path = "../source" }

@@ -1,0 +1,19 @@
+module main
+
+use std.fs.{read, write, exists}
+use std.io.println
+
+fn main() {
+    path = "data.txt"
+    if exists(path) {
+        body = read(path)
+        write("data.out.txt", body)
+        mut step = 0
+        while step < 1 {
+            println(read("data.out.txt"))
+            step = step + 1
+        }
+    } else {
+        println("missing")
+    }
+}

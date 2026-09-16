@@ -1,0 +1,73 @@
+# Shared source scanner for M5–M8. Names are unique across compiler-buraaq.
+use std.text.byte
+use std.text.eq
+use std.text.len
+use std.text.slice
+
+fn scan_is_ws(c: int) -> bool {
+    c == 32 || c == 9 || c == 10 || c == 13
+}
+
+fn scan_is_ident_cont(c: int) -> bool {
+    scan_is_ident_start(c) || (c >= 48 && c <= 57)
+}
+
+pub fn scan_is_ident_start(c: int) -> bool {
+    (c >= 65 && c <= 90) || (c >= 97 && c <= 122) || c == 95
+}
+
+pub fn scan_is_digit(c: int) -> bool {
+    c >= 48 && c <= 57
+}
+
+pub fn scan_skip(src: text, idx: int, n: int) -> int {
+    i = idx
+    while i < n {
+        c = byte(src, i)
+        if scan_is_ws(c) {
+            i = i + 1
+        } elif c == 35 {
+            while i < n {
+                if byte(src, i) == 10 {
+                    i = i + 1
+                    break
+                }
+                i = i + 1
+            }
+        } else {
+            break
+        }
+    }
+    i
+}
+
+pub fn scan_ident_end(src: text, start: int, n: int) -> int {
+    i = start
+    while i < n {
+        if scan_is_ident_cont(byte(src, i)) {
+            i = i + 1
+        } else {
+            break
+        }
+    }
+    i
+}
+
+pub fn scan_word_is(src: text, idx: int, n: int, w: text) -> bool {
+    k = len(w)
+    if idx + k > n {
+        return false
+    }
+    if eq(slice(src, idx, idx + k), w) {
+        if scan_is_ident_cont(byte(src, idx + k)) {
+            return false
+        }
+        return true
+    }
+    false
+}
+
+pub fn scan_skip_type(src: text, idx: int, n: int) -> int {
+    i = scan_skip(src, idx, n)
+    scan_ident_end(src, i, n)
+}

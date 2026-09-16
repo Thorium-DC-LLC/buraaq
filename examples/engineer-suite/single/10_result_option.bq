@@ -1,0 +1,19 @@
+# Error-style control flow without match binding (Result patterns WIP)
+use std.io.println
+
+fn read_config(name: text) -> text {
+    if name == "missing" {
+        "ERR"
+    } else {
+        "8080"
+    }
+}
+
+fn main() {
+    port = read_config("app.cfg")
+    if port == "ERR" {
+        println("3000")
+    } else {
+        println(port)
+    }
+}

@@ -1,0 +1,14 @@
+# Functions + tail-expression return
+use std.io.println
+
+fn add(a: int, b: int) -> int {
+    a + b
+}
+
+fn mul(a: int, b: int) -> int {
+    a * b
+}
+
+fn main() {
+    println(mul(add(2, 3), 4).to_text())
+}

@@ -1,0 +1,18 @@
+﻿# 60 — nested struct
+struct Address {
+    city: text
+    zip: text
+}
+
+struct Employee {
+    name: text
+    address: Address
+}
+
+fn main() {
+    e = Employee {
+        name: "Asim",
+        address: Address { city: "NYC", zip: "10001" },
+    }
+    print("{e.name} lives in {e.address.city}")
+}

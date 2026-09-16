@@ -1,0 +1,18 @@
+[package]
+name = "buraaq-std"
+version = "1.0.0"
+type = "lib"
+license = "MIT"
+description = "Buraaq standard library — one obvious way for common operations"
+
+[dependencies]
+
+[features]
+default = ["net", "http", "async"]
+net = []
+http = ["net"]
+async = []
+
+[lints]
+glob_import = "warn"
+unused_result = "warn"

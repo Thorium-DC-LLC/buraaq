@@ -1,0 +1,15 @@
+[package]
+name = "buraaq_mir"
+description = "Mid-level IR for the Buraaq compiler"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+buraaq_ast = { path = "../ast" }
+buraaq_source = { path = "../source" }
+buraaq_types = { path = "../types" }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+buraaq_diagnostics = { path = "../diagnostics" }
+buraaq_parser = { path = "../parser" }

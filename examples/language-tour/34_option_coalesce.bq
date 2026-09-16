@@ -1,0 +1,9 @@
+﻿# 34 — null-coalescing ??
+fn nickname(name: Option[text]) -> text {
+    name ?? "Anonymous"
+}
+
+fn main() {
+    print(nickname(none))
+    print(nickname(some("Asim")))
+}

@@ -1,0 +1,19 @@
+extern c {
+    fn buraaq_now_sec() -> f64
+    fn buraaq_keepalive_i32(v: c.int) -> c.int
+    fn buraaq_bench_report(name: c.text, sec: f64, n: c.int, checksum: c.int) -> void
+}
+
+fn main() {
+    n = buraaq_keepalive_i32(100000000)
+    mut sum = 0
+    mut i = 1
+    t0 = buraaq_now_sec()
+    while i <= n {
+        sum = sum * 3 + i
+        i = i + 1
+    }
+    t1 = buraaq_now_sec()
+    elapsed = t1 - t0
+    buraaq_bench_report("integer_sum", elapsed, n, sum)
+}

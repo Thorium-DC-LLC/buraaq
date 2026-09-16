@@ -1,0 +1,5 @@
+fn main() {
+    mut x = 1
+    a = ref mut x
+    b = ref mut x
+}

@@ -1,0 +1,8 @@
+[package]
+name = "bench_fib_iter"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "fib_iter"
+path = "src/main.rs"

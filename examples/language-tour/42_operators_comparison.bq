@@ -1,0 +1,8 @@
+﻿# 42 — comparison operators
+fn main() {
+    x = 5
+    y = 10
+    print((x < y).to_text())
+    print((x == y).to_text())
+    print((x != y).to_text())
+}

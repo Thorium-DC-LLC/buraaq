@@ -1,0 +1,41 @@
+# std.sync — mutexes, channels, atomics
+module std.sync
+
+extern c {
+    fn buraaq_mutex_new() -> c.ptr
+    fn buraaq_mutex_lock(handle: c.ptr) -> void
+    fn buraaq_mutex_unlock(handle: c.ptr) -> void
+    fn buraaq_mutex_free(handle: c.ptr) -> void
+}
+
+pub struct Mutex {
+    handle: c.ptr
+
+    fn lock(mut self) {
+        unsafe { buraaq_mutex_lock(self.handle) }
+    }
+
+    fn unlock(mut self) {
+        unsafe { buraaq_mutex_unlock(self.handle) }
+    }
+}
+
+pub fn new_mutex() -> Mutex {
+    Mutex { handle: unsafe { buraaq_mutex_new() } }
+}
+
+pub struct Channel[T] {
+    depth: int
+}
+
+pub struct AtomicInt {
+    value: int
+
+    fn load(self) -> int {
+        self.value
+    }
+}
+
+pub fn atomic(n: int) -> AtomicInt {
+    AtomicInt { value: n }
+}

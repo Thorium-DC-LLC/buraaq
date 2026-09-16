@@ -1,0 +1,15 @@
+﻿# 20 — match struct variant
+enum Message {
+    Quit,
+    Move { x: int, y: int },
+    Write(text),
+}
+
+fn main() {
+    msg = Message.Move { x: 10, y: 20 }
+    match msg {
+        .Move { x, y } => print("{x},{y}"),
+        .Write(t) => print(t),
+        .Quit => print("bye"),
+    }
+}

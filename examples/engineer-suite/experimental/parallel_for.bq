@@ -1,0 +1,7 @@
+# Probe: parallel for
+fn main() {
+    items = [1, 2, 3]
+    parallel for x in items {
+        print(x.to_text())
+    }
+}

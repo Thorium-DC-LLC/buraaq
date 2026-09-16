@@ -1,0 +1,23 @@
+# Ceremony-free print: mixed types, multi-arg, interpolation. No `use`.
+fn main() {
+    println("hello")
+    println(42)
+    println(-12)
+    println(1.5)
+    println(true)
+    println(false)
+    println("mix", 7, 2.5, false)
+    name = "buraaq"
+    n = 3
+    flag = true
+    println("{name} {n} {flag}")
+    println(name, n, flag)
+    println("hi {name}")
+    println(1 + 2, 10 - 4)
+    print("ab")
+    print("cd")
+    println("")
+    print_int(9)
+    print_float(0.5)
+    print_bool(false)
+}

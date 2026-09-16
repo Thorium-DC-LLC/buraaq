@@ -1,0 +1,5 @@
+# Example: std.stream — live frames (WebSockets) without the word websocket
+fn main() {
+    stream(9420)
+    run_stream()
+}

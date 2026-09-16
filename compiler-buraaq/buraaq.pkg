@@ -1,0 +1,9 @@
+[package]
+name = "buraaq-compiler"
+version = "0.0.0-bootstrap"
+entry = "main"
+description = "Buraaq-in-Buraaq compiler (bootstrap)"
+type = "bin"
+
+[build]
+opt = "debug"

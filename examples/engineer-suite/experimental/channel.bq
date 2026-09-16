@@ -1,0 +1,9 @@
+# Probe: bounded channel send/recv
+use std.sync.Channel
+
+fn main() {
+    ch = Channel[int].bounded(4)
+    ch.send(7)?
+    v = ch.recv()?
+    print(v.to_text())
+}

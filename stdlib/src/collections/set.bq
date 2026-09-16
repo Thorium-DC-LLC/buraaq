@@ -1,0 +1,10 @@
+# std.collections.set — unique values
+module std.collections.set
+
+pub struct Set[T] {
+    count: int
+
+    fn len(self) -> int {
+        self.count
+    }
+}

@@ -1,0 +1,7 @@
+﻿# 04 — Mutable bindings
+fn main() {
+    mut score = 0
+    score = score + 10
+    score = score * 2
+    print(score.to_text())
+}

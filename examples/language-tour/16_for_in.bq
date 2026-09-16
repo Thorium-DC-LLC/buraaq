@@ -1,0 +1,14 @@
+﻿# 16 — for-in iterator
+struct User {
+    name: text
+}
+
+fn main() {
+    users = [
+        User { name: "Ada" },
+        User { name: "Grace" },
+    ]
+    for user in users {
+        print(user.name)
+    }
+}

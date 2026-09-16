@@ -1,0 +1,18 @@
+﻿# 31 — Result ok/err
+enum IOError {
+    NotFound,
+}
+
+fn read_file(name: text) -> Result[text, IOError] {
+    if name == "missing" {
+        return err(IOError.NotFound)
+    }
+    ok("file contents")
+}
+
+fn main() {
+    match read_file("data.txt") {
+        Ok(data) => print(data),
+        Err(e) => print("not found"),
+    }
+}

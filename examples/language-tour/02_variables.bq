@@ -1,0 +1,8 @@
+﻿# 02 — Variables (immutable bindings)
+fn main() {
+    name = "Asim"
+    age = 30
+    pi = 3.14159
+    active = true
+    print(name)
+}

@@ -1,0 +1,6 @@
+# Example: std.collections.list
+module example.collections_list
+
+fn main() {
+    print("List[T] provides growable sequences")
+}

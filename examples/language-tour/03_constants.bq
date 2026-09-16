@@ -1,0 +1,8 @@
+﻿# 03 — Constants
+const MAX_USERS = 1000
+const APP_NAME: text = "Buraaq"
+
+fn main() {
+    print(APP_NAME)
+    print(MAX_USERS.to_text())
+}

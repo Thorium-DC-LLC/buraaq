@@ -1,0 +1,14 @@
+# std.crypto — hashing (safe wrapper over native digest)
+module std.crypto
+
+extern c {
+    fn buraaq_crypto_sha256_hex(data: c.text) -> c.text
+}
+
+pub fn sha256(data: text) -> text {
+    unsafe { buraaq_crypto_sha256_hex(data.to_c()) }
+}
+
+pub fn sha256_bytes(data: bytes) -> text {
+    sha256(data.to_text())
+}

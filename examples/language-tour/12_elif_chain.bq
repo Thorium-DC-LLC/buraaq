@@ -1,0 +1,16 @@
+﻿# 12 — elif chain
+fn grade(score: int) -> text {
+    if score >= 90 {
+        "A"
+    } elif score >= 80 {
+        "B"
+    } elif score >= 70 {
+        "C"
+    } else {
+        "F"
+    }
+}
+
+fn main() {
+    print(grade(85))
+}

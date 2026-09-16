@@ -1,0 +1,46 @@
+# std.fs — file system (one obvious way: read/write by path)
+module std.fs
+
+extern c {
+    fn buraaq_file_read(path: c.text) -> c.text
+    fn buraaq_file_write(path: c.text, contents: c.text) -> c.int
+    fn buraaq_file_exists(path: c.text) -> c.int
+}
+
+pub struct Path {
+    value: text
+}
+
+pub struct File {
+    path: text
+
+    fn read(self) -> text {
+        read(self.path)
+    }
+
+    fn write(self, contents: text) -> bool {
+        write(self.path, contents)
+    }
+}
+
+pub fn read(path: text) -> text {
+    unsafe {
+        buraaq_file_read(path.to_c())
+    }
+}
+
+pub fn write(path: text, contents: text) -> bool {
+    unsafe {
+        buraaq_file_write(path.to_c(), contents.to_c()) == 0
+    }
+}
+
+pub fn exists(path: text) -> bool {
+    unsafe {
+        buraaq_file_exists(path.to_c()) != 0
+    }
+}
+
+pub fn open(path: text) -> File {
+    File { path: path }
+}

@@ -1,0 +1,6 @@
+# CLI demo — list current directory concept
+use std.io.println
+
+fn main() {
+    println("buraaq cli-tool demo — wire std.fs.list_dir next")
+}

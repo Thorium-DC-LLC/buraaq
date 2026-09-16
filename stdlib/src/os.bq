@@ -1,0 +1,20 @@
+# std.os — environment and arguments
+module std.os
+
+extern c {
+    fn buraaq_os_getenv(name: c.text) -> c.text
+    fn buraaq_os_argc() -> c.int
+    fn buraaq_os_argv(index: c.int) -> c.text
+}
+
+pub fn getenv(name: text) -> text {
+    unsafe { buraaq_os_getenv(name.to_c()) }
+}
+
+pub fn args() -> int {
+    unsafe { buraaq_os_argc() }
+}
+
+pub fn arg(i: int) -> text {
+    unsafe { buraaq_os_argv(i) }
+}

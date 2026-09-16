@@ -1,0 +1,46 @@
+# std.text — owned string utilities
+module std.text
+
+extern c {
+    fn buraaq_text_concat(a: c.text, b: c.text) -> c.text
+    fn buraaq_text_len(s: c.text) -> c.int
+    fn buraaq_text_eq(a: c.text, b: c.text) -> c.int
+    fn buraaq_text_byte(s: c.text, i: c.int) -> c.int
+    fn buraaq_text_slice(s: c.text, start: c.int, end: c.int) -> c.text
+}
+
+pub struct String {
+    data: text
+
+    fn len(self) -> int {
+        len(self.data)
+    }
+}
+
+pub fn from_literal(s: text) -> String {
+    String { data: s }
+}
+
+pub fn len(s: text) -> int {
+    unsafe {
+        buraaq_text_len(s.to_c())
+    }
+}
+
+pub fn concat(a: text, b: text) -> text {
+    unsafe {
+        buraaq_text_concat(a.to_c(), b.to_c())
+    }
+}
+
+pub fn eq(a: text, b: text) -> bool {
+    unsafe { buraaq_text_eq(a.to_c(), b.to_c()) == 0 }
+}
+
+pub fn byte(s: text, i: int) -> int {
+    unsafe { buraaq_text_byte(s.to_c(), i) }
+}
+
+pub fn slice(s: text, start: int, end: int) -> text {
+    unsafe { buraaq_text_slice(s.to_c(), start, end) }
+}

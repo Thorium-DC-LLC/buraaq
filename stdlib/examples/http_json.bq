@@ -1,0 +1,11 @@
+# Example: std.http + std.json — fetch and parse
+module example.http_json
+
+use std.http.get
+use std.json.parse
+
+fn main() {
+    response = get("https://example.com")
+    data = parse(response.body)
+    name = data.field("name")
+}

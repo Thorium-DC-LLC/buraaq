@@ -1,0 +1,7 @@
+﻿# 10 — if statement
+fn main() {
+    age = 21
+    if age >= 18 {
+        print("Adult")
+    }
+}

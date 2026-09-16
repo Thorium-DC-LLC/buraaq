@@ -1,0 +1,13 @@
+# Example: std.thread — spawn background work
+module example.spawn_worker
+
+use std.thread.spawn_worker
+
+fn do_work() {
+    print("working")
+}
+
+fn main() {
+    handle = spawn_worker()
+    handle.join()
+}

@@ -1,0 +1,24 @@
+# std.json — JSON parse/serialize (minimal v1)
+module std.json
+
+extern c {
+    fn buraaq_json_parse_string_field(json: c.text, key: c.text) -> c.text
+}
+
+pub struct Value {
+    raw: text
+
+    fn field(self, key: text) -> text {
+        unsafe {
+            buraaq_json_parse_string_field(self.raw.to_c(), key.to_c())
+        }
+    }
+}
+
+pub fn parse(text: text) -> Value {
+    Value { raw: text }
+}
+
+pub fn stringify(v: Value) -> text {
+    v.raw
+}

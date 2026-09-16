@@ -1,0 +1,22 @@
+[package]
+name = "buraaq_driver"
+description = "Buraaq compiler driver — MIR lowering, codegen, and linking"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+buraaq_ast = { path = "../ast" }
+buraaq_codegen = { path = "../codegen" }
+buraaq_diagnostics = { path = "../diagnostics" }
+buraaq_frontend = { path = "../frontend" }
+buraaq_mir = { path = "../mir" }
+buraaq_source = { path = "../source" }
+buraaq_pkg = { path = "../pkg" }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3"
+walkdir = "2"
+buraaq_lexer = { path = "../lexer" }
+buraaq_parser = { path = "../parser" }
+buraaq_codegen = { path = "../codegen" }

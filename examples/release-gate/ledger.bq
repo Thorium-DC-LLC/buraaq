@@ -1,0 +1,18 @@
+fn deposit(balance: int, cents: int) -> int {
+    balance + cents
+}
+
+fn withdraw(balance: int, cents: int) -> int {
+    if cents > balance {
+        return balance
+    }
+    balance - cents
+}
+
+fn main() {
+    mut total = 0
+    total = deposit(total, 5000)
+    total = withdraw(total, 1200)
+    print("balance cents ")
+    println(total)
+}

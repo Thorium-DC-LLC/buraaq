@@ -1,0 +1,34 @@
+# std.hold — tables of named columns (the Buraaq shape of Pandas)
+#
+# h = hold("name,cents")
+# stow(h, "checking,1200")
+# println(col_mean(h, "cents"))
+module std.hold
+
+extern c {
+    fn buraaq_hold_new(cols: c.text) -> c.int
+    fn buraaq_hold_stow(id: c.int, row: c.text) -> c.int
+    fn buraaq_hold_rows(id: c.int) -> c.int
+    fn buraaq_hold_cols(id: c.int) -> c.int
+    fn buraaq_hold_pick(id: c.int, col: c.text, row: c.int) -> c.text
+    fn buraaq_hold_keep(id: c.int, col: c.text, value: c.text) -> c.int
+    fn buraaq_hold_col_mean(id: c.int, col: c.text) -> c.float
+    fn buraaq_hold_col_sum(id: c.int, col: c.text) -> c.float
+    fn buraaq_hold_order(id: c.int, col: c.text) -> c.int
+    fn buraaq_hold_from_csv(path: c.text) -> c.int
+    fn buraaq_hold_to_csv(id: c.int, path: c.text) -> c.int
+    fn buraaq_hold_view(id: c.int) -> c.text
+}
+
+pub fn hold(cols: text) -> int { unsafe { buraaq_hold_new(cols.to_c()) } }
+pub fn stow(h: int, row: text) { unsafe { buraaq_hold_stow(h, row.to_c()) } }
+pub fn rows(h: int) -> int { unsafe { buraaq_hold_rows(h) } }
+pub fn cols(h: int) -> int { unsafe { buraaq_hold_cols(h) } }
+pub fn pick(h: int, col: text, row: int) -> text { unsafe { buraaq_hold_pick(h, col.to_c(), row) } }
+pub fn keep(h: int, col: text, value: text) -> int { unsafe { buraaq_hold_keep(h, col.to_c(), value.to_c()) } }
+pub fn col_mean(h: int, col: text) -> float { unsafe { buraaq_hold_col_mean(h, col.to_c()) } }
+pub fn col_sum(h: int, col: text) -> float { unsafe { buraaq_hold_col_sum(h, col.to_c()) } }
+pub fn order(h: int, col: text) { unsafe { buraaq_hold_order(h, col.to_c()) } }
+pub fn from_csv(path: text) -> int { unsafe { buraaq_hold_from_csv(path.to_c()) } }
+pub fn to_csv(h: int, path: text) { unsafe { buraaq_hold_to_csv(h, path.to_c()) } }
+pub fn hold_text(h: int) -> text { unsafe { buraaq_hold_view(h) } }

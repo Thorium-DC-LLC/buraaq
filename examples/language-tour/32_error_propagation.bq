@@ -1,0 +1,14 @@
+﻿# 32 — error propagation with ?
+enum AppError {
+    Failed,
+}
+
+fn step1() throws AppError -> int { 1 }
+fn step2() throws AppError -> int { step1()? + 1 }
+
+fn main() {
+    match step2() {
+        Ok(v) => print(v.to_text()),
+        Err(_) => print("failed"),
+    }
+}

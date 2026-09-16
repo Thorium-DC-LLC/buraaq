@@ -1,0 +1,9 @@
+﻿# 44 — block scope
+fn main() {
+    x = 1
+    {
+        x = 2
+        print(x.to_text())
+    }
+    print(x.to_text())
+}

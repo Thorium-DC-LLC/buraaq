@@ -1,0 +1,18 @@
+[package]
+name = "multi_module"
+version = "0.1.0"
+entry = "main"
+authors = []
+license = "MIT"
+type = "bin"
+
+[dependencies]
+
+[dev_dependencies]
+
+[build]
+targets = []
+
+[features]
+
+[lints]

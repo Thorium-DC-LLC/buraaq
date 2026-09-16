@@ -1,0 +1,11 @@
+﻿# 22 — struct literal
+struct RGB {
+    r: byte
+    g: byte
+    b: byte
+}
+
+fn main() {
+    color = RGB { r: 255, g: 128, b: 0 }
+    print(color.g.to_text())
+}

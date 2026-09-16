@@ -1,0 +1,19 @@
+[package]
+name = "buraaq_codegen"
+description = "LLVM IR codegen and native linking for Buraaq"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+buraaq_mir = { path = "../mir" }
+tempfile = "3"
+thiserror = { workspace = true }
+
+[dev-dependencies]
+buraaq_diagnostics = { path = "../diagnostics" }
+buraaq_driver = { path = "../driver" }
+buraaq_frontend = { path = "../frontend" }
+buraaq_mir = { path = "../mir" }
+buraaq_parser = { path = "../parser" }
+buraaq_source = { path = "../source" }
+tempfile = "3"

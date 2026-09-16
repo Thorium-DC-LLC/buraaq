@@ -1,0 +1,14 @@
+# std.collections.buffer — byte/text buffer
+module std.collections.buffer
+
+pub struct Buffer {
+    count: int
+
+    fn as_text(self) -> text {
+        ""
+    }
+}
+
+pub fn with_capacity(n: int) -> Buffer {
+    Buffer { count: 0 }
+}

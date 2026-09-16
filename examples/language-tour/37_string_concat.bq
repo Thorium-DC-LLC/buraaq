@@ -1,0 +1,6 @@
+﻿# 37 — string concatenation
+fn main() {
+    a = "Hello, "
+    b = "Buraaq"
+    print(a + b)
+}

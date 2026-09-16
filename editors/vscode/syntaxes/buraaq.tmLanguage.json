@@ -1,0 +1,76 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Buraaq",
+  "scopeName": "source.buraaq",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#keywords" },
+    { "include": "#types" },
+    { "include": "#numbers" },
+    { "include": "#functions" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.number-sign.buraaq",
+          "match": "#.*$"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.buraaq",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.buraaq",
+              "match": "\\\\."
+            },
+            {
+              "name": "meta.embedded.line.buraaq",
+              "begin": "\\{",
+              "end": "\\}",
+              "patterns": [{ "include": "$self" }]
+            }
+          ]
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.buraaq",
+          "match": "\\b(async|await|break|const|continue|copy|defer|drop|else|elif|enum|extern|false|fn|for|give|if|impl|in|match|module|mut|parallel|pub|raise|ref|return|self|spawn|struct|throws|trait|true|type|unsafe|use|void|while|as|test|bench|expect|ok|err|some|none|not|new|give)\\b"
+        }
+      ]
+    },
+    "types": {
+      "patterns": [
+        {
+          "name": "entity.name.type.buraaq",
+          "match": "\\b[A-Z][A-Za-z0-9_]*\\b"
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.buraaq",
+          "match": "\\b0[xX][0-9a-fA-F_]+|0[bB][01_]+|\\d[\\d_]*(\\.\\d+)?([eE][+-]?\\d+)?\\b"
+        }
+      ]
+    },
+    "functions": {
+      "patterns": [
+        {
+          "name": "entity.name.function.buraaq",
+          "match": "\\b[a-z_][A-Za-z0-9_]*(?=\\s*\\()"
+        }
+      ]
+    }
+  }
+}

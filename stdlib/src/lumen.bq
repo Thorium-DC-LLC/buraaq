@@ -1,0 +1,65 @@
+# std.lumen — native HD UI (the one obvious way)
+#
+# app("Harbor", 1280, 800)
+# heading("Deploy jobs")
+# field("title", "Title")
+# button("create", "Create job")
+# bind("http://127.0.0.1:8080", "jobs")
+# show()
+#
+# Lumen is the native console. Keel is the API. Complexity is in the runtime.
+# Reference: docs/LUMEN.md
+module std.lumen
+
+extern c {
+    fn buraaq_ui_app(title: c.text, w: c.int, h: c.int) -> c.int
+    fn buraaq_ui_heading(text: c.text) -> c.int
+    fn buraaq_ui_note(text: c.text) -> c.int
+    fn buraaq_ui_field(id: c.text, label: c.text) -> c.int
+    fn buraaq_ui_button(id: c.text, label: c.text) -> c.int
+    fn buraaq_ui_bind(url: c.text, resource: c.text) -> c.int
+    fn buraaq_ui_keep(path: c.text) -> c.int
+    fn buraaq_ui_show() -> c.int
+    fn buraaq_ui_value(id: c.text) -> c.text
+    fn buraaq_ui_clicked(id: c.text) -> c.int
+}
+
+pub fn app(title: text, w: int, h: int) {
+    unsafe { buraaq_ui_app(title.to_c(), w, h) }
+}
+
+pub fn heading(text: text) {
+    unsafe { buraaq_ui_heading(text.to_c()) }
+}
+
+pub fn note(text: text) {
+    unsafe { buraaq_ui_note(text.to_c()) }
+}
+
+pub fn field(id: text, label: text) {
+    unsafe { buraaq_ui_field(id.to_c(), label.to_c()) }
+}
+
+pub fn button(id: text, label: text) {
+    unsafe { buraaq_ui_button(id.to_c(), label.to_c()) }
+}
+
+pub fn bind(url: text, resource: text) {
+    unsafe { buraaq_ui_bind(url.to_c(), resource.to_c()) }
+}
+
+pub fn keep(path: text) {
+    unsafe { buraaq_ui_keep(path.to_c()) }
+}
+
+pub fn show() {
+    unsafe { buraaq_ui_show() }
+}
+
+pub fn value(id: text) -> text {
+    unsafe { buraaq_ui_value(id.to_c()) }
+}
+
+pub fn clicked(id: text) -> int {
+    unsafe { buraaq_ui_clicked(id.to_c()) }
+}

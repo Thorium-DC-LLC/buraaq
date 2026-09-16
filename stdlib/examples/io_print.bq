@@ -1,0 +1,8 @@
+# Example: std.io
+module example.io_print
+
+use std.io.println
+
+fn main() {
+    println("Hello from Buraaq std.io")
+}

@@ -1,0 +1,10 @@
+# std.collections.list — growable array
+module std.collections.list
+
+pub struct List[T] {
+    count: int
+
+    fn len(self) -> int {
+        self.count
+    }
+}

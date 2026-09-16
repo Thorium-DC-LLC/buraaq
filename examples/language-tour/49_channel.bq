@@ -1,0 +1,9 @@
+﻿# 49 — Channel
+use std.sync.Channel
+
+fn main() {
+    ch = Channel[int].bounded(4)
+    ch.send(42)?
+    v = ch.recv()?
+    print(v.to_text())
+}

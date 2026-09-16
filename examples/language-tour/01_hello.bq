@@ -1,0 +1,6 @@
+﻿# 01 — Hello World
+use std.io.println
+
+fn main() {
+    println("Hello, Buraaq!")
+}

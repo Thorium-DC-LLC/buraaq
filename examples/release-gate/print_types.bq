@@ -1,0 +1,10 @@
+fn main() {
+    print("hello")
+    println(42)
+    println(1.5)
+    println(true)
+    println(false)
+    print_int(7)
+    print_float(2.25)
+    print_bool(true)
+}

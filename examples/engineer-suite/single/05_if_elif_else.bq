@@ -1,0 +1,18 @@
+# Branching — if / elif / else
+use std.io.println
+
+fn grade(score: int) -> text {
+    if score >= 90 {
+        "A"
+    } elif score >= 80 {
+        "B"
+    } elif score >= 70 {
+        "C"
+    } else {
+        "F"
+    }
+}
+
+fn main() {
+    println(grade(85))
+}

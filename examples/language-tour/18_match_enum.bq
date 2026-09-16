@@ -1,0 +1,18 @@
+﻿# 18 — match on enum
+enum Status {
+    Active,
+    Idle,
+    Stopped,
+}
+
+fn label(s: Status) -> text {
+    match s {
+        .Active => "running",
+        .Idle => "waiting",
+        .Stopped => "off",
+    }
+}
+
+fn main() {
+    print(label(Status.Active))
+}

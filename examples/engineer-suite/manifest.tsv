@@ -1,0 +1,29 @@
+# id	path	kind	mode	expect_contains	notes
+01_hello	single/01_hello.bq	single	run	Hello, Buraaq!	basics
+02_newline_escape	single/02_newline_escape.bq	single	run	line2	lexer+codegen \n
+03_variables_math	single/03_variables_math.bq	single	run	40	arithmetic
+04_mut_while	single/04_mut_while.bq	single	run	5	loops
+05_if_elif_else	single/05_if_elif_else.bq	single	run	B	control flow
+06_for_range_sum	single/06_for_range_sum.bq	single	run	55	for-range
+07_functions	single/07_functions_implicit_return.bq	single	run	20	functions
+08_break_continue	single/08_break_continue.bq	single	run	36	loop control
+09_struct_fields	single/09_struct_enum_match.bq	single	run	7	structs
+10_error_flow	single/10_result_option.bq	single	run	8080	errors
+11_generics_max	single/11_generics_max.bq	single	run	9	generics
+12_string_interpolation	single/12_string_interpolation.bq	single	run	listening	strings
+13_arrays	single/13_arrays_index.bq	single	run	20	arrays
+14_ref_borrow	single/14_ref_borrow.bq	single	run	42	borrowing
+15_spawn_worker	single/15_spawn_worker.bq	single	run	42	concurrency
+16_extern	single/16_extern_printf.bq	single	run	ffi-ok	extern c
+17_comparison	single/17_comparison_ops.bq	single	run	pass	comparisons
+18_modulo	single/18_modulo.bq	single	run	18	modulo
+19_nested_blocks	single/19_nested_blocks.bq	single	run	42	scopes
+20_enum_match	experimental/enum_match.bq	single	run	ok	enum match
+multi_module	projects/multi_module	project	run	20	modules
+fs_read	projects/fs_read	project	run	engineer-suite-fs-ok	filesystem
+json_crypto	projects/json_crypto	project	run	bccc1e6e9451e5f6f3d9d1fc308d3351de6afc1e2a911afd1a7bc801d7bc7649	json+sha256
+math_time_os	projects/math_time_os	project	run	7	stdlib math
+exp_struct_fn	experimental/struct_fn.bq	single	compile		experimental
+exp_async	experimental/async_task.bq	single	compile		experimental
+exp_parallel	experimental/parallel_for.bq	single	compile		experimental
+exp_channel	experimental/channel.bq	single	compile		experimental

@@ -1,0 +1,10 @@
+# std.collections.map — key/value map
+module std.collections.map
+
+pub struct Map[K, V] {
+    count: int
+
+    fn len(self) -> int {
+        self.count
+    }
+}

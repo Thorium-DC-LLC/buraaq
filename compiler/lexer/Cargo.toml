@@ -1,0 +1,12 @@
+[package]
+name = "buraaq_lexer"
+description = "Lexer for the Buraaq programming language"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+buraaq_source = { path = "../source" }
+buraaq_diagnostics = { path = "../diagnostics" }
+
+[dev-dependencies]
+proptest = "1"

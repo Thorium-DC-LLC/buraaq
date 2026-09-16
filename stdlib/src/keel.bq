@@ -1,0 +1,48 @@
+# std.keel — APIs and TLS servers (the one obvious way)
+#
+# page("/", "public/index.html")
+# api("items", "title, body")
+# run()
+#
+# Keel is the hull you build on. Ship packs it. Dock runs it. Land puts Dock
+# on any cloud or bare metal. std.service is the same module under the old name.
+# Reference: docs/STACK.md, docs/SERVICE.md
+module std.keel
+
+extern c {
+    fn buraaq_svc_page(path: c.text, file: c.text) -> c.int
+    fn buraaq_svc_api(name: c.text, fields: c.text) -> c.int
+    fn buraaq_svc_store(url: c.text) -> c.int
+    fn buraaq_svc_key(secret: c.text) -> c.int
+    fn buraaq_svc_origin(allowed: c.text) -> c.int
+    fn buraaq_svc_run(port: c.int) -> c.int
+    fn buraaq_http_get_body(url: c.text) -> c.text
+}
+
+pub fn page(path: text, file: text) {
+    unsafe { buraaq_svc_page(path.to_c(), file.to_c()) }
+}
+
+pub fn api(name: text, fields: text) {
+    unsafe { buraaq_svc_api(name.to_c(), fields.to_c()) }
+}
+
+pub fn store(url: text) {
+    unsafe { buraaq_svc_store(url.to_c()) }
+}
+
+pub fn key(secret: text) {
+    unsafe { buraaq_svc_key(secret.to_c()) }
+}
+
+pub fn origin(allowed: text) {
+    unsafe { buraaq_svc_origin(allowed.to_c()) }
+}
+
+pub fn call(url: text) -> text {
+    unsafe { buraaq_http_get_body(url.to_c()) }
+}
+
+pub fn run() {
+    unsafe { buraaq_svc_run(0) }
+}

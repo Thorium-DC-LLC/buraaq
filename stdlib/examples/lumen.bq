@@ -1,0 +1,15 @@
+# Lumen — native HD console
+module example.lumen
+
+use std.lumen.{app, heading, note, field, button, bind, show}
+
+fn main() {
+    app("Harbor", 1280, 800)
+    heading("Deploy jobs")
+    note("Native Lumen console for a Keel API")
+    field("title", "Title")
+    field("body", "Details")
+    button("create", "Create job")
+    bind("http://127.0.0.1:8080", "jobs")
+    show()
+}

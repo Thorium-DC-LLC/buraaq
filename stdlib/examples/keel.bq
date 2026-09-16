@@ -1,0 +1,10 @@
+# Keel — the whole program
+module example.keel
+
+use std.keel.{page, api, run}
+
+fn main() {
+    page("/", "public/index.html")
+    api("items", "title, body")
+    run()
+}

@@ -1,0 +1,12 @@
+﻿# 54 — extern C FFI
+extern c {
+    fn strlen(s: c.text) -> c.usize
+}
+
+fn main() {
+    msg = "Buraaq"
+    len = unsafe {
+        strlen(msg.to_c())
+    }
+    print(len.to_text())
+}

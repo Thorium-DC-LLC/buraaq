@@ -1,0 +1,14 @@
+﻿# 46 — visibility pub
+module tour.visibility
+
+pub fn public_api() -> text {
+    "open"
+}
+
+fn internal_helper() -> text {
+    "hidden"
+}
+
+fn main() {
+    print(public_api())
+}

@@ -1,0 +1,17 @@
+---
+source: diagnostics/tests/snapshots.rs
+assertion_line: 55
+expression: "String::from_utf8(out).unwrap()"
+---
+error: `connection` was transferred and cannot be used again [E0302]
+
+  example.bq:3:5
+    3 |     send_request(connection)
+      |     ------------------------
+    4 |     connection.close()
+      |     ^^^^^^^^^^^^^^^^  
+      |       you attempted to use `connection` again here
+
+help: If the callee only needs temporary access, pass a borrow (`ref connection`) instead.
+Try:
+    ref connection

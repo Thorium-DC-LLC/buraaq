@@ -1,0 +1,15 @@
+[package]
+name = "buraaq_parser"
+description = "Parser for the Buraaq programming language"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+buraaq_ast = { path = "../ast" }
+buraaq_diagnostics = { path = "../diagnostics" }
+buraaq_lexer = { path = "../lexer" }
+buraaq_source = { path = "../source" }
+
+[dev-dependencies]
+proptest = "1"
+buraaq_diagnostics = { path = "../diagnostics" }

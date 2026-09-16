@@ -1,0 +1,12 @@
+﻿# 48 — Mutex
+use std.sync.Mutex
+
+fn main() {
+    counter = Mutex.new(0)
+    handle = spawn {
+        guard = counter.lock()
+        guard[] = guard[] + 1
+    }
+    handle.join()
+    print(counter.lock()[].to_text())
+}

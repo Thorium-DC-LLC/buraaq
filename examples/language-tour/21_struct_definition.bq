@@ -1,0 +1,10 @@
+﻿# 21 — struct definition
+struct Point {
+    x: float
+    y: float
+}
+
+fn main() {
+    p = Point { x: 1.0, y: 2.0 }
+    print(p.x.to_text())
+}

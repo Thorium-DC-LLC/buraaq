@@ -1,0 +1,22 @@
+module main
+
+use safety.prove_safety
+use workers.prove_workers
+use mathx.prove_math
+
+fn main() {
+    flag = getenv("BURAAQ_COVERAGE_ONLY")
+    if flag == "1" {
+        prove_safety()
+        prove_workers()
+        prove_math()
+        println("coverage pass")
+        return
+    }
+    page("/", "public/index.html")
+    api("accounts", "name, note")
+    api("ledger", "account, cents, memo")
+    key("forge-key")
+    origin("https://app.buraaq.dev")
+    run()
+}

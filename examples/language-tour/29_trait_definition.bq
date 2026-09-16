@@ -1,0 +1,19 @@
+﻿# 29 — trait definition
+trait Greeter {
+    fn greet(self) -> text
+}
+
+struct Person {
+    name: text
+}
+
+impl Greeter for Person {
+    fn greet(self) -> text {
+        "Hi, {self.name}"
+    }
+}
+
+fn main() {
+    p = Person { name: "Asim" }
+    print(p.greet())
+}

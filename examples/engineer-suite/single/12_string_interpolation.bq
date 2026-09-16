@@ -1,0 +1,9 @@
+# String interpolation {expr}
+use std.io.println
+
+fn main() {
+    service = "api"
+    port = 8080
+    msg = "{service} listening on {port}"
+    println(msg)
+}

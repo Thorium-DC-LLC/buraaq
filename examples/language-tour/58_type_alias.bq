@@ -1,0 +1,13 @@
+﻿# 58 — type alias
+type UserId = uint
+type Name = text
+
+struct User {
+    id: UserId
+    name: Name
+}
+
+fn main() {
+    u = User { id: 1, name: "Ada" }
+    print(u.name)
+}

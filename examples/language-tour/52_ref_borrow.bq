@@ -1,0 +1,10 @@
+﻿# 52 — ref borrow
+fn increment(ref mut value: int) {
+    value[] = value[] + 1
+}
+
+fn main() {
+    mut n = 41
+    increment(ref mut n)
+    print(n.to_text())
+}

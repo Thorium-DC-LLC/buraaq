@@ -1,0 +1,6 @@
+# Example: std.fs — read and write by path
+module example.fs_read_write
+
+fn main() {
+    print("use std.fs.read and std.fs.write")
+}

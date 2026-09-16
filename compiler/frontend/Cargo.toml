@@ -1,0 +1,14 @@
+[package]
+name = "buraaq_frontend"
+description = "Buraaq compiler frontend pipeline"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+buraaq_ast = { path = "../ast" }
+buraaq_diagnostics = { path = "../diagnostics" }
+buraaq_lexer = { path = "../lexer" }
+buraaq_parser = { path = "../parser" }
+buraaq_semantic = { path = "../semantic" }
+buraaq_source = { path = "../source" }
+buraaq_pkg = { path = "../pkg" }

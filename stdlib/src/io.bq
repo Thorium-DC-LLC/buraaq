@@ -1,0 +1,41 @@
+# std.io — console and stream I/O
+module std.io
+
+extern c {
+    fn buraaq_print_str(s: c.text) -> void
+    fn buraaq_print_str_ln(s: c.text) -> void
+    fn buraaq_print_i32(n: c.int) -> void
+    fn buraaq_print_i32_ln(n: c.int) -> void
+    fn buraaq_print_f64_ln(n: c.float) -> void
+    fn buraaq_print_bool_ln(n: c.int) -> void
+}
+
+pub fn print(msg: text) {
+    unsafe {
+        buraaq_print_str(msg.to_c())
+    }
+}
+
+pub fn println(msg: text) {
+    unsafe {
+        buraaq_print_str_ln(msg.to_c())
+    }
+}
+
+pub fn print_int(n: int) {
+    unsafe {
+        buraaq_print_i32_ln(n)
+    }
+}
+
+pub fn print_float(n: float) {
+    unsafe {
+        buraaq_print_f64_ln(n)
+    }
+}
+
+pub fn print_bool(v: bool) {
+    unsafe {
+        buraaq_print_bool_ln(v)
+    }
+}

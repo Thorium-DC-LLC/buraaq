@@ -1,0 +1,24 @@
+extern c {
+    fn buraaq_now_sec() -> f64
+    fn buraaq_keepalive_i32(v: c.int) -> c.int
+    fn buraaq_keepalive_f64(v: f64) -> f64
+    fn buraaq_bench_report_f64(name: c.text, sec: f64, n: c.int, checksum: f64) -> void
+}
+
+fn main() {
+    n = buraaq_keepalive_i32(10000000)
+    mut y = 0.0
+    mut x = 1.0
+    a = 1.0000001
+    mut i = 0
+    t0 = buraaq_now_sec()
+    while i < n {
+        y = a * x + y
+        x = x + 1.0
+        i = i + 1
+    }
+    t1 = buraaq_now_sec()
+    elapsed = t1 - t0
+    y = buraaq_keepalive_f64(y)
+    buraaq_bench_report_f64("float_saxpy", elapsed, n, y)
+}

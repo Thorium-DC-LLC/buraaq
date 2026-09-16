@@ -1,0 +1,11 @@
+---
+source: diagnostics/tests/snapshots.rs
+assertion_line: 76
+expression: "String::from_utf8(out).unwrap()"
+---
+error: expected expression after `=` [E0102]
+
+  bad.bq:2:5
+    2 |     give x = 
+      |     ^^^^^^^^^
+      |       expression missing here

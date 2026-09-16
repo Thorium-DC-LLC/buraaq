@@ -1,0 +1,43 @@
+# Bootstrap compiler entry — M3 lexer through M8 guest clang
+use lexer.lex_file
+use llvm.build_file
+use llvm.dump_llvm
+use mir.dump_mir
+use names.dump_names
+use parser.parse_file
+use std.os.arg
+use std.os.args
+use std.text.eq
+
+fn main() {
+    n = args()
+    if n > 5 {
+        if eq(arg(1), "build") {
+            build_file(arg(2), arg(3), arg(4), arg(5))
+        } elif eq(arg(1), "parse") {
+            parse_file(arg(2))
+        } elif eq(arg(1), "names") {
+            dump_names(arg(2))
+        } elif eq(arg(1), "mir") {
+            dump_mir(arg(2))
+        } elif eq(arg(1), "llvm") {
+            dump_llvm(arg(2))
+        } else {
+            lex_file(arg(1))
+        }
+    } elif n > 2 {
+        if eq(arg(1), "parse") {
+            parse_file(arg(2))
+        } elif eq(arg(1), "names") {
+            dump_names(arg(2))
+        } elif eq(arg(1), "mir") {
+            dump_mir(arg(2))
+        } elif eq(arg(1), "llvm") {
+            dump_llvm(arg(2))
+        } else {
+            lex_file(arg(1))
+        }
+    } elif n > 1 {
+        lex_file(arg(1))
+    }
+}

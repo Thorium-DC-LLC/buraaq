@@ -1,0 +1,9 @@
+﻿# 55 — heap allocation with new
+fn main() {
+    list = new List[int]()
+    list.push(1)
+    list.push(2)
+    for n in list {
+        print(n.to_text())
+    }
+}

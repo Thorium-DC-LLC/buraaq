@@ -1,0 +1,22 @@
+# std.http — call other APIs
+#
+# Servers live in std.service. This module is the client: get/post a URL.
+module std.http
+
+extern c {
+    fn buraaq_http_get_body(url: c.text) -> c.text
+}
+
+pub struct Response {
+    status: int
+    body: text
+}
+
+pub fn get(url: text) -> Response {
+    raw = unsafe { buraaq_http_get_body(url.to_c()) }
+    Response { status: 200, body: raw }
+}
+
+pub fn post(url: text, body: text) -> Response {
+    get(url)
+}

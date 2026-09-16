@@ -1,0 +1,10 @@
+# Nested scopes and shadowing-friendly blocks
+use std.io.println
+
+fn main() {
+    outer = 1
+    if outer == 1 {
+        inner = 41
+        println((outer + inner).to_text())
+    }
+}

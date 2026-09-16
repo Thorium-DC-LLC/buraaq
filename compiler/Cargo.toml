@@ -1,0 +1,33 @@
+[workspace]
+resolver = "2"
+members = [
+    "buraaq",
+    "source",
+    "diagnostics",
+    "ast",
+    "lexer",
+    "parser",
+    "types",
+    "ownership",
+    "borrow",
+    "semantic",
+    "frontend",
+    "mir",
+    "codegen",
+    "driver",
+    "pkg",
+    "ship",
+    "fmt",
+    "doc",
+    "lsp",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["Buraaq Contributors"]
+
+[workspace.dependencies]
+thiserror = "2"
+unicode-width = "0.2"

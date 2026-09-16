@@ -1,0 +1,6 @@
+# demotest — entry module (convention: src/main.bq)
+module main
+
+fn main() {
+    print("Hello from demotest!")
+}

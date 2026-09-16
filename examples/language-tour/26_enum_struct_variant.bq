@@ -1,0 +1,14 @@
+﻿# 26 — enum struct variants
+enum NetworkEvent {
+    Connected { addr: text },
+    Data(bytes),
+    Disconnected,
+}
+
+fn main() {
+    ev = NetworkEvent.Connected { addr: "127.0.0.1" }
+    match ev {
+        .Connected { addr } => print(addr),
+        _ => print("other"),
+    }
+}

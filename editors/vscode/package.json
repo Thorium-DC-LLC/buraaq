@@ -1,0 +1,61 @@
+{
+  "name": "buraaq",
+  "displayName": "Buraaq",
+  "description": "Buraaq language support — syntax, LSP diagnostics, completion, and more",
+  "version": "0.1.0",
+  "publisher": "buraaq",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Programming Languages"],
+  "activationEvents": [
+    "onLanguage:buraaq"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "buraaq",
+        "aliases": ["Buraaq", "buraaq"],
+        "extensions": [".bq"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "buraaq",
+        "scopeName": "source.buraaq",
+        "path": "./syntaxes/buraaq.tmLanguage.json"
+      }
+    ],
+    "configuration": {
+      "title": "Buraaq",
+      "properties": {
+        "buraaq.lsp.path": {
+          "type": "string",
+          "default": "buraaq",
+          "description": "Path to the Buraaq CLI (must support `lsp-server`)."
+        },
+        "buraaq.lsp.trace": {
+          "type": "string",
+          "enum": ["off", "messages", "verbose"],
+          "default": "off",
+          "description": "LSP trace level."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p .",
+    "watch": "tsc -watch -p .",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.4.0"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  }
+}

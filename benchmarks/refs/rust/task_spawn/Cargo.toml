@@ -1,0 +1,8 @@
+[package]
+name = "bench-task-spawn-rust"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "task_spawn"
+path = "src/main.rs"

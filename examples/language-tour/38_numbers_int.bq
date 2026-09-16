@@ -1,0 +1,8 @@
+﻿# 38 — integer literals
+fn main() {
+    dec = 42
+    hex = 0xFF
+    bin = 0b1010
+    grouped = 1_000_000
+    print((dec + hex + bin).to_text())
+}

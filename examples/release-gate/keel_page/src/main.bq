@@ -1,0 +1,6 @@
+module main
+
+fn main() {
+    page("/", "public/index.html")
+    run()
+}

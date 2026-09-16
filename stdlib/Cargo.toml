@@ -1,0 +1,16 @@
+[package]
+name = "buraaq-stdlib-tests"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dev-dependencies]
+buraaq_parser = { path = "../compiler/parser" }
+buraaq_diagnostics = { path = "../compiler/diagnostics" }
+buraaq_source = { path = "../compiler/source" }
+cc = "1"
+walkdir = "2"
+
+[[bench]]
+name = "alloc_bench"
+harness = false

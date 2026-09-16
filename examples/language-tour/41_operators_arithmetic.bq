@@ -1,0 +1,10 @@
+﻿# 41 — arithmetic operators
+fn main() {
+    a = 10
+    b = 3
+    print((a + b).to_text())
+    print((a - b).to_text())
+    print((a * b).to_text())
+    print((a / b).to_text())
+    print((a % b).to_text())
+}

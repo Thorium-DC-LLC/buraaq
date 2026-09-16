@@ -1,0 +1,13 @@
+# Example: C interoperability
+module example.ffi_printf
+
+extern c {
+    fn printf(format: c.text) -> c.int
+}
+
+fn main() {
+    msg = "Hello from C"
+    unsafe {
+        printf(msg.to_c())
+    }
+}

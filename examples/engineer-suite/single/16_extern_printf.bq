@@ -1,0 +1,10 @@
+# extern C FFI — printf one line
+extern c {
+    fn printf(fmt: c.text, ...) -> c.int
+}
+
+fn main() {
+    unsafe {
+        printf("ffi-ok\n")
+    }
+}

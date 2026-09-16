@@ -1,0 +1,18 @@
+# std.thread — OS threads and join handles
+module std.thread
+
+extern c {
+    fn buraaq_runtime_init(workers: c.int) -> void
+}
+
+pub struct JoinHandle {
+    id: int
+
+    fn join(self) -> int {
+        self.id
+    }
+}
+
+pub fn init(workers: int) {
+    unsafe { buraaq_runtime_init(workers) }
+}

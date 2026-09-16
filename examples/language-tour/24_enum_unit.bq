@@ -1,0 +1,17 @@
+﻿# 24 — enum unit variants
+enum Direction {
+    North,
+    South,
+    East,
+    West,
+}
+
+fn main() {
+    d = Direction.North
+    match d {
+        .North => print("N"),
+        .South => print("S"),
+        .East => print("E"),
+        .West => print("W"),
+    }
+}

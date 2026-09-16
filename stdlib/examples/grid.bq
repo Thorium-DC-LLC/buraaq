@@ -1,0 +1,10 @@
+# Example: std.grid — numeric arrays without NumPy ceremony
+fn main() {
+    g = zeros(2, 2)
+    put_at(g, 0, 0, 1.0)
+    put_at(g, 1, 1, 1.0)
+    v = row("2,3")
+    w = row("4,5")
+    println(dot(v, w))
+    println(view(g))
+}

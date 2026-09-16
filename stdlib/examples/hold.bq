@@ -1,0 +1,9 @@
+# Example: std.hold — tables without Pandas ceremony
+fn main() {
+    h = hold("name,cents")
+    stow(h, "checking,1200")
+    stow(h, "savings,2600")
+    println(rows(h))
+    println(col_mean(h, "cents"))
+    println(pick(h, "name", 0))
+}

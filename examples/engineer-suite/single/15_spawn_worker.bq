@@ -1,0 +1,13 @@
+# spawn + wait (thread pool submit)
+use std.io.println
+
+fn work() {
+    println("42")
+}
+
+fn main() {
+    t = spawn {
+        work()
+    }
+    t.wait()
+}

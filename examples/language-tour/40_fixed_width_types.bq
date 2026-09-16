@@ -1,0 +1,7 @@
+﻿# 40 — fixed-width types
+fn main() {
+    small: i8 = -128
+    big: u64 = 18_446_744_073_709_551_615
+    precise: f32 = 1.5
+    print(small.to_text())
+}

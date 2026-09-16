@@ -1,0 +1,2 @@
+# std.collections — dynamic data structures (see submodules: list, map, set, buffer)
+module std.collections

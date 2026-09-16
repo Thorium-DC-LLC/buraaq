@@ -1,0 +1,12 @@
+# Struct literal + field access (trailing commas must parse)
+use std.io.println
+
+struct Point {
+    x: int,
+    y: int,
+}
+
+fn main() {
+    p = Point { x: 3, y: 4 }
+    println((p.x + p.y).to_text())
+}

@@ -1,0 +1,261 @@
+# M4 bootstrap parser — AST events match Rust `buraaq_parser` on the golden subset
+use std.fs.read
+use std.io.println
+use std.text.byte
+use std.text.eq
+use std.text.len
+use std.text.slice
+
+fn p_is_ws(c: int) -> bool {
+    c == 32 || c == 9 || c == 10 || c == 13
+}
+
+fn p_is_ident_start(c: int) -> bool {
+    (c >= 65 && c <= 90) || (c >= 97 && c <= 122) || c == 95
+}
+
+fn p_is_ident_cont(c: int) -> bool {
+    p_is_ident_start(c) || (c >= 48 && c <= 57)
+}
+
+fn p_is_digit(c: int) -> bool {
+    c >= 48 && c <= 57
+}
+
+fn p_skip(src: text, idx: int, n: int) -> int {
+    i = idx
+    while i < n {
+        c = byte(src, i)
+        if p_is_ws(c) {
+            i = i + 1
+        } elif c == 35 {
+            while i < n {
+                if byte(src, i) == 10 {
+                    i = i + 1
+                    break
+                }
+                i = i + 1
+            }
+        } else {
+            break
+        }
+    }
+    i
+}
+
+fn p_ident_end(src: text, start: int, n: int) -> int {
+    i = start
+    while i < n {
+        if p_is_ident_cont(byte(src, i)) {
+            i = i + 1
+        } else {
+            break
+        }
+    }
+    i
+}
+
+fn p_word_is(src: text, idx: int, n: int, w: text) -> bool {
+    k = len(w)
+    if idx + k > n {
+        return false
+    }
+    if eq(slice(src, idx, idx + k), w) {
+        if p_is_ident_cont(byte(src, idx + k)) {
+            return false
+        }
+        return true
+    }
+    false
+}
+
+fn parse_type_name(src: text, idx: int, n: int) -> int {
+    i = p_skip(src, idx, n)
+    e = p_ident_end(src, i, n)
+    println(slice(src, i, e))
+    e
+}
+
+fn parse_prefix(src: text, idx: int, n: int) -> int {
+    i = p_skip(src, idx, n)
+    c = byte(src, i)
+    if p_is_digit(c) {
+        e = i
+        while e < n {
+            if p_is_digit(byte(src, e)) {
+                e = e + 1
+            } else {
+                break
+            }
+        }
+        println("int")
+        println(slice(src, i, e))
+        return e
+    }
+    if p_is_ident_start(c) {
+        e = p_ident_end(src, i, n)
+        name = slice(src, i, e)
+        i = p_skip(src, e, n)
+        if byte(src, i) == 40 {
+            println("app")
+            println(name)
+            return parse_args(src, i, n)
+        }
+        println("ident")
+        println(name)
+        return e
+    }
+    i
+}
+
+fn parse_args(src: text, idx: int, n: int) -> int {
+    i = p_skip(src, idx, n)
+    if byte(src, i) == 40 {
+        i = i + 1
+    }
+    i = p_skip(src, i, n)
+    if byte(src, i) == 41 {
+        return i + 1
+    }
+    i = parse_expr(src, i, n)
+    i = p_skip(src, i, n)
+    while byte(src, i) == 44 {
+        i = parse_expr(src, i + 1, n)
+        i = p_skip(src, i, n)
+    }
+    if byte(src, i) == 41 {
+        i = i + 1
+    }
+    i
+}
+
+fn parse_expr(src: text, idx: int, n: int) -> int {
+    i = parse_prefix(src, idx, n)
+    i = p_skip(src, i, n)
+    c = byte(src, i)
+    nxt = byte(src, i + 1)
+    if c == 43 {
+        println("bin")
+        println("Plus")
+        return parse_prefix(src, i + 1, n)
+    }
+    if c == 45 {
+        if nxt != 62 {
+            println("bin")
+            println("Minus")
+            return parse_prefix(src, i + 1, n)
+        }
+    }
+    if c == 62 {
+        if nxt == 61 {
+            println("bin")
+            println("Ge")
+            return parse_prefix(src, i + 2, n)
+        }
+        println("bin")
+        println("Gt")
+        return parse_prefix(src, i + 1, n)
+    }
+    i
+}
+
+fn parse_block(src: text, idx: int, n: int) -> int {
+    i = p_skip(src, idx, n)
+    if byte(src, i) == 123 {
+        i = i + 1
+    }
+    i = p_skip(src, i, n)
+    while i < n {
+        if byte(src, i) == 125 {
+            return i + 1
+        }
+        if p_word_is(src, i, n, "if") {
+            i = parse_if(src, i, n)
+        } elif p_word_is(src, i, n, "return") {
+            i = p_skip(src, i + 6, n)
+            println("return")
+            i = parse_expr(src, i, n)
+        } else {
+            i = parse_expr(src, i, n)
+        }
+        i = p_skip(src, i, n)
+    }
+    i
+}
+
+fn parse_if(src: text, idx: int, n: int) -> int {
+    i = p_skip(src, idx + 2, n)
+    println("if")
+    i = parse_expr(src, i, n)
+    parse_block(src, i, n)
+}
+
+fn parse_params(src: text, idx: int, n: int) -> int {
+    i = p_skip(src, idx, n)
+    if byte(src, i) == 40 {
+        i = i + 1
+    }
+    i = p_skip(src, i, n)
+    if byte(src, i) == 41 {
+        return i + 1
+    }
+    while i < n {
+        i = p_skip(src, i, n)
+        e = p_ident_end(src, i, n)
+        println("param")
+        println(slice(src, i, e))
+        i = p_skip(src, e, n)
+        if byte(src, i) == 58 {
+            i = p_skip(src, i + 1, n)
+            i = parse_type_name(src, i, n)
+        }
+        i = p_skip(src, i, n)
+        if byte(src, i) == 44 {
+            i = i + 1
+        } elif byte(src, i) == 41 {
+            return i + 1
+        } else {
+            break
+        }
+    }
+    i
+}
+
+fn parse_fn(src: text, idx: int, n: int) -> int {
+    i = p_skip(src, idx + 2, n)
+    e = p_ident_end(src, i, n)
+    println("fn")
+    println(slice(src, i, e))
+    i = parse_params(src, e, n)
+    i = p_skip(src, i, n)
+    if byte(src, i) == 45 {
+        if byte(src, i + 1) == 62 {
+            i = p_skip(src, i + 2, n)
+            println("ret")
+            i = parse_type_name(src, i, n)
+        }
+    }
+    parse_block(src, i, n)
+}
+
+pub fn parse_file(path: text) {
+    src = read(path)
+    n = len(src)
+    i = p_skip(src, 0, n)
+    while i < n {
+        if p_word_is(src, i, n, "fn") {
+            i = parse_fn(src, i, n)
+        } elif p_word_is(src, i, n, "use") {
+            while i < n {
+                if byte(src, i) == 10 {
+                    i = i + 1
+                    break
+                }
+                i = i + 1
+            }
+        } else {
+            i = i + 1
+        }
+        i = p_skip(src, i, n)
+    }
+}

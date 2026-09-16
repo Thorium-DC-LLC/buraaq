@@ -1,0 +1,8 @@
+﻿# 05 — Type inference
+fn main() {
+    count = 42
+    ratio = 0.5
+    label = "inferred"
+    items = [1, 2, 3]
+    print(items.len().to_text())
+}

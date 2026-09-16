@@ -1,0 +1,13 @@
+﻿# 28 — generic struct
+struct Box[T] {
+    value: T
+
+    fn get(self) -> T {
+        self.value
+    }
+}
+
+fn main() {
+    b = Box[int] { value: 99 }
+    print(b.get().to_text())
+}

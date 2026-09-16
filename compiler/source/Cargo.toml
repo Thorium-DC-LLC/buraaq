@@ -1,0 +1,8 @@
+[package]
+name = "buraaq_source"
+description = "Source files, spans, and position tracking for the Buraaq compiler"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+unicode-width.workspace = true

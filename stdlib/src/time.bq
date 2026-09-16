@@ -1,0 +1,32 @@
+# std.time — clocks and sleep
+module std.time
+
+extern c {
+    fn buraaq_time_now_ms() -> i64
+    fn buraaq_time_sleep_ms(ms: i64) -> void
+    fn buraaq_now_sec() -> f64
+}
+
+pub struct Duration {
+    millis: i64
+}
+
+pub fn now_ms() -> i64 {
+    unsafe { buraaq_time_now_ms() }
+}
+
+pub fn now_sec() -> f64 {
+    unsafe { buraaq_now_sec() }
+}
+
+pub fn sleep(d: Duration) {
+    unsafe { buraaq_time_sleep_ms(d.millis) }
+}
+
+pub fn ms(n: i64) -> Duration {
+    Duration { millis: n }
+}
+
+pub fn sec(n: i64) -> Duration {
+    Duration { millis: n * 1000 }
+}

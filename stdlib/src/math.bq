@@ -1,0 +1,76 @@
+# std.math — every day number. Scalars here; arrays live in std.grid.
+module std.math
+
+extern c {
+    fn buraaq_math_sqrt(x: c.float) -> c.float
+    fn buraaq_math_abs_f64(x: c.float) -> c.float
+    fn buraaq_math_abs_i32(n: c.int) -> c.int
+    fn buraaq_math_min_f64(a: c.float, b: c.float) -> c.float
+    fn buraaq_math_max_f64(a: c.float, b: c.float) -> c.float
+    fn buraaq_math_sin(x: c.float) -> c.float
+    fn buraaq_math_cos(x: c.float) -> c.float
+    fn buraaq_math_tan(x: c.float) -> c.float
+    fn buraaq_math_asin(x: c.float) -> c.float
+    fn buraaq_math_acos(x: c.float) -> c.float
+    fn buraaq_math_atan(x: c.float) -> c.float
+    fn buraaq_math_atan2(y: c.float, x: c.float) -> c.float
+    fn buraaq_math_sinh(x: c.float) -> c.float
+    fn buraaq_math_cosh(x: c.float) -> c.float
+    fn buraaq_math_tanh(x: c.float) -> c.float
+    fn buraaq_math_exp(x: c.float) -> c.float
+    fn buraaq_math_log(x: c.float) -> c.float
+    fn buraaq_math_log10(x: c.float) -> c.float
+    fn buraaq_math_log2(x: c.float) -> c.float
+    fn buraaq_math_pow(x: c.float, y: c.float) -> c.float
+    fn buraaq_math_hypot(x: c.float, y: c.float) -> c.float
+    fn buraaq_math_floor(x: c.float) -> c.float
+    fn buraaq_math_ceil(x: c.float) -> c.float
+    fn buraaq_math_trunc(x: c.float) -> c.float
+    fn buraaq_math_round(x: c.float) -> c.float
+    fn buraaq_math_fmod(x: c.float, y: c.float) -> c.float
+    fn buraaq_math_copysign(mag: c.float, sgn: c.float) -> c.float
+    fn buraaq_math_cbrt(x: c.float) -> c.float
+    fn buraaq_math_pi() -> c.float
+    fn buraaq_math_euler() -> c.float
+    fn buraaq_math_deg(rad: c.float) -> c.float
+    fn buraaq_math_rad(deg: c.float) -> c.float
+    fn buraaq_math_clamp(x: c.float, lo: c.float, hi: c.float) -> c.float
+    fn buraaq_math_lerp(a: c.float, b: c.float, t: c.float) -> c.float
+    fn buraaq_math_sign(x: c.float) -> c.float
+}
+
+pub fn sqrt(x: float) -> float { unsafe { buraaq_math_sqrt(x) } }
+pub fn abs(x: float) -> float { unsafe { buraaq_math_abs_f64(x) } }
+pub fn abs_int(x: int) -> int { unsafe { buraaq_math_abs_i32(x) } }
+pub fn min(a: float, b: float) -> float { unsafe { buraaq_math_min_f64(a, b) } }
+pub fn max(a: float, b: float) -> float { unsafe { buraaq_math_max_f64(a, b) } }
+pub fn sin(x: float) -> float { unsafe { buraaq_math_sin(x) } }
+pub fn cos(x: float) -> float { unsafe { buraaq_math_cos(x) } }
+pub fn tan(x: float) -> float { unsafe { buraaq_math_tan(x) } }
+pub fn asin(x: float) -> float { unsafe { buraaq_math_asin(x) } }
+pub fn acos(x: float) -> float { unsafe { buraaq_math_acos(x) } }
+pub fn atan(x: float) -> float { unsafe { buraaq_math_atan(x) } }
+pub fn atan2(y: float, x: float) -> float { unsafe { buraaq_math_atan2(y, x) } }
+pub fn sinh(x: float) -> float { unsafe { buraaq_math_sinh(x) } }
+pub fn cosh(x: float) -> float { unsafe { buraaq_math_cosh(x) } }
+pub fn tanh(x: float) -> float { unsafe { buraaq_math_tanh(x) } }
+pub fn exp(x: float) -> float { unsafe { buraaq_math_exp(x) } }
+pub fn log(x: float) -> float { unsafe { buraaq_math_log(x) } }
+pub fn log10(x: float) -> float { unsafe { buraaq_math_log10(x) } }
+pub fn log2(x: float) -> float { unsafe { buraaq_math_log2(x) } }
+pub fn pow(x: float, y: float) -> float { unsafe { buraaq_math_pow(x, y) } }
+pub fn hypot(x: float, y: float) -> float { unsafe { buraaq_math_hypot(x, y) } }
+pub fn floor(x: float) -> float { unsafe { buraaq_math_floor(x) } }
+pub fn ceil(x: float) -> float { unsafe { buraaq_math_ceil(x) } }
+pub fn trunc(x: float) -> float { unsafe { buraaq_math_trunc(x) } }
+pub fn round(x: float) -> float { unsafe { buraaq_math_round(x) } }
+pub fn fmod(x: float, y: float) -> float { unsafe { buraaq_math_fmod(x, y) } }
+pub fn copysign(mag: float, sgn: float) -> float { unsafe { buraaq_math_copysign(mag, sgn) } }
+pub fn cbrt(x: float) -> float { unsafe { buraaq_math_cbrt(x) } }
+pub fn pi() -> float { unsafe { buraaq_math_pi() } }
+pub fn euler() -> float { unsafe { buraaq_math_euler() } }
+pub fn deg(rad: float) -> float { unsafe { buraaq_math_deg(rad) } }
+pub fn rad(deg: float) -> float { unsafe { buraaq_math_rad(deg) } }
+pub fn clamp(x: float, lo: float, hi: float) -> float { unsafe { buraaq_math_clamp(x, lo, hi) } }
+pub fn lerp(a: float, b: float, t: float) -> float { unsafe { buraaq_math_lerp(a, b, t) } }
+pub fn sign(x: float) -> float { unsafe { buraaq_math_sign(x) } }

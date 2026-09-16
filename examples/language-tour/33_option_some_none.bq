@@ -1,0 +1,17 @@
+﻿# 33 — Option some/none
+fn find_index(items: List[text], target: text) -> Option[int] {
+    for i in 0..items.len() {
+        if items[i] == target {
+            return some(i)
+        }
+    }
+    none
+}
+
+fn main() {
+    items = ["a", "b", "c"]
+    match find_index(items, "b") {
+        Some(i) => print(i.to_text()),
+        None => print("not found"),
+    }
+}

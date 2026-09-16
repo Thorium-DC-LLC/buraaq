@@ -1,0 +1,6 @@
+# Hello — std.io and modules
+use std.io.println
+
+fn main() {
+    println("Hello, Buraaq!")
+}

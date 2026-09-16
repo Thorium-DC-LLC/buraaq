@@ -1,0 +1,18 @@
+# std.process — child processes
+module std.process
+
+extern c {
+    fn buraaq_process_exit_code(cmd: c.text) -> c.int
+}
+
+pub struct Command {
+    program: text
+
+    fn run(self) -> int {
+        unsafe { buraaq_process_exit_code(self.program.to_c()) }
+    }
+}
+
+pub fn cmd(program: text) -> Command {
+    Command { program: program }
+}

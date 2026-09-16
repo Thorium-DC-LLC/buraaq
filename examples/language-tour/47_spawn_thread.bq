@@ -1,0 +1,11 @@
+﻿# 47 — spawn thread
+fn worker(id: int) {
+    print("worker {id}")
+}
+
+fn main() {
+    handle = spawn {
+        worker(1)
+    }
+    handle.join()
+}

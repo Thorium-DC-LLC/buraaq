@@ -1,0 +1,18 @@
+[package]
+name = "buraaq_semantic"
+description = "Semantic analysis, type checking, and safety orchestration for Buraaq"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+buraaq_ast = { path = "../ast" }
+buraaq_borrow = { path = "../borrow" }
+buraaq_diagnostics = { path = "../diagnostics" }
+buraaq_ownership = { path = "../ownership" }
+buraaq_source = { path = "../source" }
+buraaq_types = { path = "../types" }
+
+[dev-dependencies]
+buraaq_diagnostics = { path = "../diagnostics" }
+buraaq_lexer = { path = "../lexer" }
+buraaq_parser = { path = "../parser" }

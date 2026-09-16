@@ -1,0 +1,296 @@
+(* ============================================================================
+   Buraaq Language Grammar (EBNF)
+   Version: 0.2 (PROMPT 2)
+   Blocks: brace-delimited { }
+   One binding form, one import form, one error propagation form.
+   ============================================================================ *)
+
+program            = { top_decl } ;
+
+top_decl           = module_decl
+                   | import_decl
+                   | item
+                   ;
+
+module_decl        = "module", dotted_path, ";" ;
+import_decl        = "use", import_spec, { ",", import_spec }, ";" ;
+
+import_spec        = dotted_path
+                   | dotted_path, ".", "{", import_name, { ",", import_name }, "}"
+                   | dotted_path, "as", IDENT
+                   ;
+import_name        = IDENT | "*" ;
+
+(* --- Items (top-level and nested in modules via future extension) --- *)
+
+item               = fn_decl
+                   | struct_decl
+                   | enum_decl
+                   | trait_decl
+                   | impl_decl
+                   | const_decl
+                   | type_alias
+                   | extern_block
+                   ;
+
+const_decl         = "const", IDENT, [ ":", type_expr ], "=", expr, ";" ;
+type_alias         = "type", IDENT, generic_params, "=", type_expr, ";" ;
+
+(* --- Functions --- *)
+
+fn_decl            = "fn", IDENT, generic_params, "(", [ param_list ], ")",
+                     fn_sig_tail, block
+                   | "async", "fn", IDENT, generic_params, "(", [ param_list ], ")",
+                     fn_sig_tail, block
+                   ;
+fn_sig_tail        = [ "->", type_expr ]
+                   | [ "->", type_expr ], "throws", type_expr
+                   | "throws", type_expr
+                   ;
+param_list         = param, { ",", param } ;
+param              = IDENT, ":", type_expr ;
+
+generic_params     = [ "[", generic_param, { ",", generic_param }, "]" ] ;
+generic_param      = IDENT, [ ":", trait_bounds ] ;
+
+(* --- Types --- *)
+
+type_expr          = func_type
+                   | union_type
+                   ;
+union_type         = postfix_type, { "|", postfix_type } ;
+func_type          = "fn", "(", [ type_list ], ")", "->", type_expr ;
+type_list          = type_expr, { ",", type_expr } ;
+
+postfix_type       = primary_type, { type_postfix } ;
+type_postfix       = "[", [ type_expr ], "]"          (* T[] slice, List[T] *)
+                   | "[", type_expr, ";" , const_expr, "]"   (* [T; N] fixed array *)
+                   ;
+
+primary_type       = named_type
+                   | tuple_type
+                   | "void"
+                   ;
+named_type         = dotted_path, generic_args ;
+generic_args       = [ "[", type_expr, { ",", type_expr }, "]" ] ;
+tuple_type         = "(", type_expr, { ",", type_expr }, ")" ;
+
+trait_bounds       = dotted_path, { "+", dotted_path } ;
+
+(* --- Structs and Enums --- *)
+
+struct_decl        = "struct", IDENT, generic_params, struct_body ;
+struct_body        = "{", { struct_field, [ ";" ] }, { method_decl }, "}" ;
+struct_field       = IDENT, ":", type_expr ;
+
+enum_decl          = "enum", IDENT, generic_params, enum_body ;
+enum_body          = "{", enum_variant, { ",", enum_variant }, [ "," ], "}" ;
+enum_variant       = IDENT
+                   | IDENT, "(", type_expr, { ",", type_expr }, ")"
+                   | IDENT, "{", struct_field, { ",", struct_field }, "}"
+                   ;
+
+(* --- Traits and Impl --- *)
+
+trait_decl         = "trait", IDENT, generic_params, trait_body ;
+trait_body         = "{", { trait_method }, "}" ;
+trait_method       = "fn", IDENT, generic_params, "(", [ param_list ], ")",
+                     [ "->", type_expr ], ";" ;
+
+impl_decl          = "impl", generic_params, impl_target, "for", named_type, impl_body ;
+impl_target        = IDENT, generic_args ;
+impl_body          = "{", { method_decl }, "}" ;
+
+method_decl        = "fn", IDENT, "(", [ method_param_list ], ")",
+                     fn_sig_tail, block
+                   | "drop", block
+                   ;
+method_param_list  = [ "mut", "self" ]
+                   | [ "self" ]
+                   | param, { ",", param }
+                   | "self", { ",", param }
+                   | "mut", "self", { ",", param }
+                   ;
+
+(* --- Extern C --- *)
+
+extern_block       = "extern", "c", "{", { extern_item }, "}" ;
+extern_item        = "fn", IDENT, "(", [ extern_param_list ], ")", "->", type_expr, ";" ;
+extern_param_list  = extern_param, { ",", extern_param } ;
+extern_param       = IDENT, ":", type_expr, [ "..." ] ;   (* varargs last only *)
+
+(* --- Statements and Blocks --- *)
+
+block              = "{", { block_content }, "}" ;
+block_content      = stmt | item ;
+stmt               = var_decl, ";"
+                   | expr_stmt, ";"
+                   | return_stmt, ";"
+                   | break_stmt, ";"
+                   | continue_stmt, ";"
+                   | if_stmt
+                   | while_stmt
+                   | for_stmt
+                   | match_stmt
+                   | unsafe_block
+                   | defer_stmt, ";"
+                   ;
+
+var_decl           = [ "mut" ], IDENT, [ ":", type_expr ], "=", expr ;
+expr_stmt          = expr ;
+return_stmt        = "return", [ expr ] ;
+break_stmt         = "break", [ expr ] ;
+continue_stmt      = "continue" ;
+defer_stmt         = "defer", expr ;
+
+if_stmt            = "if", expr, block, { "elif", expr, block }, [ "else", block ] ;
+while_stmt         = "while", expr, block ;
+for_stmt           = "for", for_head, block
+                   | "parallel", "for", for_head, block
+                   ;
+for_head           = IDENT, "in", expr
+                   | IDENT, "in", expr, ".." , expr          (* half-open range *)
+                   | IDENT, "in", expr, "..=", expr         (* inclusive range *)
+                   ;
+
+match_stmt         = "match", expr, "{", match_arm, { ",", match_arm }, [ "," ], "}" ;
+match_arm          = pattern, "=>", ( block | expr ) ;
+
+unsafe_block       = "unsafe", block ;
+
+(* --- Patterns --- *)
+
+pattern            = literal
+                   | IDENT
+                   | "_"
+                   | ".", IDENT                             (* enum variant shorthand *)
+                   | IDENT, ".", IDENT                      (* Enum.Variant *)
+                   | IDENT, ".", IDENT, "(", pattern_list, ")"
+                   | IDENT, ".", IDENT, "{", field_pattern, { ",", field_pattern }, "}"
+                   | "(", pattern_list, ")"
+                   ;
+pattern_list       = pattern, { ",", pattern } ;
+field_pattern      = IDENT, [ ":", pattern ] ;
+
+(* --- Expressions --- *)
+
+expr               = assign_expr ;
+assign_expr        = logical_or, [ assign_op, assign_expr ] ;
+assign_op          = "=" ;
+
+logical_or         = logical_and, { "||", logical_and } ;
+logical_and        = equality, { "&&", equality } ;
+equality           = relational, { ( "==" | "!=" ), relational } ;
+relational         = bitwise_or, { ( "<" | "<=" | ">" | ">=" ), bitwise_or } ;
+bitwise_or         = bitwise_xor, { "|", bitwise_xor } ;
+bitwise_xor        = bitwise_and, { "^", bitwise_and } ;
+bitwise_and        = shift, { "&", shift } ;
+shift              = additive, { ( "<<" | ">>" ), additive } ;
+additive           = multiplicative, { ( "+" | "-" ), multiplicative } ;
+multiplicative     = unary, { ( "*" | "/" | "%" ), unary } ;
+
+unary              = postfix
+                   | ( "-" | "!" | "not" | "ref" | "ref", "mut" | "give" | "copy" | "await" ), unary
+                   ;
+postfix            = primary, { postfix_op } ;
+postfix_op         = ".", IDENT, [ "(", [ arg_list ], ")" ]    (* field or method *)
+                   | "[", expr, "]"                               (* index *)
+                   | "(", [ arg_list ], ")"                       (* call *)
+                   | "?", [ "?" ]                                   (* error/option propagate *)
+                   | "!"
+                   ;
+
+primary            = literal
+                   | IDENT
+                   | "self"
+                   | "(", expr, ")"
+                   | block                                          (* block as expression *)
+                   | "if", expr, block, "else", block               (* if expression *)
+                   | "match", expr, "{", match_arm, { ",", match_arm }, [ "," ], "}"
+                   | "async", block
+                   | "spawn", block
+                   | "spawn", expr                                  (* spawn fn call *)
+                   | "new", type_expr, [ struct_literal_tail ]
+                   | struct_literal
+                   | array_literal
+                   | "unsafe", block
+                   ;
+
+struct_literal_tail = "(", [ arg_list ], ")"
+                   | "{", field_init, { ",", field_init }, [ "," ], "}"
+                   ;
+struct_literal     = IDENT, struct_literal_tail ;
+field_init         = IDENT, ":", expr ;
+array_literal      = "[", [ expr, { ",", expr }, [ "," ] ], "]" ;
+
+arg_list           = expr, { ",", expr } ;
+const_expr         = integer_lit ;   (* subset for array lengths; generalized in semantics *)
+
+(* --- Literals --- *)
+
+literal            = integer_lit
+                   | float_lit
+                   | bool_lit
+                   | char_lit
+                   | string_lit
+                   | bytes_lit
+                   | "none"
+                   | "some", "(", expr, ")"
+                   | "ok", "(", expr, ")"
+                   | "err", "(", expr, ")"
+                   ;
+
+bool_lit           = "true" | "false" ;
+
+integer_lit        = DECIMAL
+                   | "0x", HEX_DIGIT, { HEX_DIGIT | "_" }
+                   | "0b", BIN_DIGIT, { BIN_DIGIT | "_" }
+                   ;
+float_lit          = DECIMAL, ".", DECIMAL, [ EXP ]
+                   | DECIMAL, EXP
+                   ;
+EXP                = ( "e" | "E" ), [ "+" | "-" ], DECIMAL ;
+
+char_lit           = "'", ( ESCAPE | ^("'" | "\\" | "\n" | "\r"), "'", ) ;
+string_lit         = '"', { STRING_CHAR }, '"' ;
+bytes_lit          = "b", string_lit ;
+
+STRING_CHAR        = INTERP_TEXT
+                   | "${", expr, "}"
+                   | ESCAPE
+                   ;
+INTERP_TEXT        = ^('"' | "\\" | "$" | "\n" | "\r" | "{"), { ANY } ;
+
+ESCAPE             = "\\", ( "n" | "r" | "t" | "\\" | "'" | '"', | "0", | "x", HEX_DIGIT, HEX_DIGIT ) ;
+
+(* --- Lexical tokens --- *)
+
+IDENT              = LETTER, { LETTER | DIGIT | "_" } ;
+dotted_path        = IDENT, { ".", IDENT } ;
+
+DECIMAL            = DIGIT, { DIGIT | "_" } ;
+LETTER             = "A".."Z" | "a".."z" | "_" ;
+DIGIT              = "0".."9" ;
+HEX_DIGIT          = DIGIT | "A".."F" | "a".."f" ;
+BIN_DIGIT          = "0" | "1" ;
+
+(* --- Reserved keywords (cannot be IDENT) --- *)
+(*
+   async await break const continue copy defer else enum err extern false fn
+   for give if impl in match module mut new none not ok parallel pub ref
+   return self some spawn struct trait true type unsafe use void while throws
+*)
+
+(* --- Semicolon and newline rules (not in EBNF; lexer/parser convention) ---
+   - ";" is optional at end of statements.
+   - Newline terminates a statement when parsing cannot continue (ASI-style).
+   - Trailing expr in fn block without ";" is implicit return.
+   - Last token in file must be newline.
+*)
+
+(* --- Attributes (attach to item; parsed as prefix) --- *)
+(*
+   attribute      = "#[", IDENT, { ",", attr_arg }, "]" ;
+   attr_arg       = IDENT | literal ;
+   Common: inline, cold, test, export(c), cfg(...), cfg_feature(...)
+*)

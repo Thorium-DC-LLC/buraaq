@@ -1,0 +1,30 @@
+# std.db — PostgreSQL via libpq (loaded at runtime)
+module std.db
+
+extern c {
+    fn buraaq_pg_connect(conninfo: c.text) -> c.int
+    fn buraaq_pg_ok() -> c.int
+    fn buraaq_pg_exec(sql: c.text) -> c.text
+    fn buraaq_pg_quote(s: c.text) -> c.text
+    fn buraaq_pg_close() -> void
+}
+
+pub fn connect(conninfo: text) -> int {
+    unsafe { buraaq_pg_connect(conninfo.to_c()) }
+}
+
+pub fn connected() -> int {
+    unsafe { buraaq_pg_ok() }
+}
+
+pub fn exec(sql: text) -> text {
+    unsafe { buraaq_pg_exec(sql.to_c()) }
+}
+
+pub fn quote(s: text) -> text {
+    unsafe { buraaq_pg_quote(s.to_c()) }
+}
+
+pub fn disconnect() {
+    unsafe { buraaq_pg_close() }
+}

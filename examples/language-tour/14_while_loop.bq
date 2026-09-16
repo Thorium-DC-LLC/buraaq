@@ -1,0 +1,8 @@
+﻿# 14 — while loop
+fn main() {
+    mut n = 5
+    while n > 0 {
+        print(n.to_text())
+        n = n - 1
+    }
+}

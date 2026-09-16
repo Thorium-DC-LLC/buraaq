@@ -1,0 +1,10 @@
+﻿# 43 — logical operators
+fn main() {
+    adult = true
+    licensed = false
+    if adult && licensed {
+        print("can drive")
+    } else {
+        print("cannot drive")
+    }
+}

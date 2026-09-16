@@ -1,0 +1,12 @@
+module workers
+
+fn worker_body() {
+    println("spawn-ok")
+}
+
+pub fn prove_workers() {
+    t = spawn {
+        worker_body()
+    }
+    t.wait()
+}

@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 4 * * *"
+
+jobs:
+  test:
+    name: compiler tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install LLVM (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          choco install llvm -y
+          echo "C:\Program Files\LLVM\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      - name: Install LLVM (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y clang libssl-dev
+      - name: Verify clang
+        run: |
+          clang --version
+          clang++ --version
+      - name: Test compiler workspace
+        working-directory: compiler
+        run: cargo test --workspace
+      - name: Gate A/C/H native jobs
+        working-directory: compiler
+        run: |
+          cargo test -p buraaq_driver --test modules --test bootstrap_m3 --test cli_and_pkg -- --nocapture
+          cargo test -p buraaq --test cli -- --nocapture
+      - name: Gate B equivalent workloads
+        working-directory: compiler
+        run: cargo test -p buraaq_driver --test perf_gate -- --nocapture
+      - name: Fuzz smoke
+        working-directory: compiler
+        run: cargo test --workspace fuzz_
+
+  nightly-sanitizer:
+    name: sanitizer (linux nightly)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+      - name: AddressSanitizer parser/lexer
+        working-directory: compiler
+        env:
+          RUSTFLAGS: "-Zsanitizer=address"
+        run: cargo +nightly test -p buraaq_parser -p buraaq_lexer --target x86_64-unknown-linux-gnu

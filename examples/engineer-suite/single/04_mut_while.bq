@@ -1,0 +1,10 @@
+# Mutable state + while loop (countdown)
+use std.io.println
+
+fn main() {
+    mut n = 5
+    while n > 0 {
+        println(n.to_text())
+        n = n - 1
+    }
+}

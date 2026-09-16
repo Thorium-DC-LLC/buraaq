@@ -1,0 +1,12 @@
+# Comparison and boolean logic
+use std.io.println
+
+fn main() {
+    score = 85
+    passed = score >= 60 && score <= 100
+    if passed {
+        println("pass")
+    } else {
+        println("fail")
+    }
+}

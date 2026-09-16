@@ -1,0 +1,5 @@
+[package]
+name = "keel_page"
+version = "0.1.0"
+entry = "main"
+type = "bin"

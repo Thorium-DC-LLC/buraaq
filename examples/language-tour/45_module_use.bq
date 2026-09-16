@@ -1,0 +1,10 @@
+﻿# 45 — module imports
+module tour.imports
+
+use std.io.println
+use std.math.{sqrt}
+
+fn main() {
+    println("imports work")
+    print(sqrt(9.0).to_text())
+}

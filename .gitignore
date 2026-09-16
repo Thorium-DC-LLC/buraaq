@@ -1,0 +1,50 @@
+# Build artifacts
+target/
+**/target/
+*.pdb
+*.ilk
+*.obj
+*.o
+*.exp
+*.lib
+*.a
+*.dll
+*.so
+*.dylib
+*.exe
+!dist/buraaq.exe
+*.idb
+*.ipdb
+*.iobj
+
+# Packed ships and local run state
+*.bur
+**/.buraaq/
+forge.env
+*.env
+!.env.example
+
+# Secrets and keys
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+id_ed25519
+*.ncb
+
+# Generated IR / asm dumps
+benchmarks/results/
+compiler-buraaq/target/
+examples/**/target/
+
+# Tooling
+.llvm/
+llvm/
+.cache/
+.idea/
+.vscode/
+*.swp
+Thumbs.db
+.DS_Store
+*.log

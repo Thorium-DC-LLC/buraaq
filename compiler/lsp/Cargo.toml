@@ -1,0 +1,24 @@
+[package]
+name = "buraaq_lsp"
+description = "Buraaq Language Server (LSP)"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "buraaq-lsp"
+path = "src/main.rs"
+
+[dependencies]
+buraaq_ast = { path = "../ast" }
+buraaq_diagnostics = { path = "../diagnostics" }
+buraaq_fmt = { path = "../fmt" }
+buraaq_frontend = { path = "../frontend" }
+buraaq_lexer = { path = "../lexer" }
+buraaq_semantic = { path = "../semantic" }
+buraaq_source = { path = "../source" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+tower-lsp = "0.20"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }

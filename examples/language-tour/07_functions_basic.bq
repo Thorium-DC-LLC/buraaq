@@ -1,0 +1,8 @@
+﻿# 07 — Basic functions
+fn add(a: int, b: int) -> int {
+    a + b
+}
+
+fn main() {
+    print(add(2, 3).to_text())
+}

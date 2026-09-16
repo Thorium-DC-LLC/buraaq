@@ -1,0 +1,7 @@
+# Array literal + indexing
+use std.io.println
+
+fn main() {
+    nums = [10, 20, 30]
+    println(nums[1].to_text())
+}

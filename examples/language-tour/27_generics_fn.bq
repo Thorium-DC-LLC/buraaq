@@ -1,0 +1,15 @@
+﻿# 27 — generic function
+fn first[T](items: List[T]) -> Option[T] {
+    if items.is_empty() {
+        return none
+    }
+    some(items[0])
+}
+
+fn main() {
+    nums = [10, 20, 30]
+    match first(nums) {
+        Some(n) => print(n.to_text()),
+        None => print("empty"),
+    }
+}

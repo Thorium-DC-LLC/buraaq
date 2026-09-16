@@ -1,0 +1,10 @@
+fn add(a: int, b: int) -> int {
+    if a > b {
+        return a
+    }
+    a + b
+}
+
+fn main() {
+    print(add(2, 3))
+}

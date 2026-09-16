@@ -1,0 +1,47 @@
+# std.stream — live framed messages (the Buraaq name for WebSockets)
+#
+# stream(9420)
+# run_stream()
+#
+# s = wire("ws://127.0.0.1:9420/")
+# say(s, "hello")
+# println(hear(s))
+module std.stream
+
+extern c {
+    fn buraaq_stream_bind(port: c.int) -> c.int
+    fn buraaq_stream_hail() -> c.int
+    fn buraaq_stream_wire(url: c.text) -> c.int
+    fn buraaq_stream_say(id: c.int, msg: c.text) -> c.int
+    fn buraaq_stream_hear(id: c.int) -> c.text
+    fn buraaq_stream_hangup(id: c.int) -> void
+    fn buraaq_stream_run() -> void
+}
+
+pub fn stream(port: int) {
+    unsafe { buraaq_stream_bind(port) }
+}
+
+pub fn hail() -> int {
+    unsafe { buraaq_stream_hail() }
+}
+
+pub fn wire(url: text) -> int {
+    unsafe { buraaq_stream_wire(url.to_c()) }
+}
+
+pub fn say(id: int, msg: text) {
+    unsafe { buraaq_stream_say(id, msg.to_c()) }
+}
+
+pub fn hear(id: int) -> text {
+    unsafe { buraaq_stream_hear(id) }
+}
+
+pub fn hangup(id: int) {
+    unsafe { buraaq_stream_hangup(id) }
+}
+
+pub fn run_stream() {
+    unsafe { buraaq_stream_run() }
+}

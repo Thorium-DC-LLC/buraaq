@@ -1,0 +1,17 @@
+﻿# 56 — defer cleanup
+struct Resource {
+    id: int
+
+    drop fn {
+        print("cleanup {self.id}")
+    }
+}
+
+fn demo() {
+    r = Resource { id: 1 }
+    defer print("scope exit")
+}
+
+fn main() {
+    demo()
+}

@@ -1,0 +1,13 @@
+[package]
+name = "buraaq_diagnostics"
+description = "Structured diagnostics and human-readable rendering for Buraaq"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+buraaq_source = { path = "../source" }
+unicode-width.workspace = true
+serde = { version = "1", features = ["derive"] }
+
+[dev-dependencies]
+insta = "1"
