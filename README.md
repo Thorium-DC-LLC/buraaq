@@ -28,16 +28,20 @@ Site: [buraaq.dev](https://buraaq.dev)
 You need **Buraaq** and **clang**. You do **not** need Rust, Cargo, Node, or a JVM.
 
 ```powershell
+git clone https://github.com/Thorium-DC-LLC/buraaq.git
+cd buraaq
 .\install.ps1
 buraaq doctor
 ```
 
 ```bash
+git clone https://github.com/Thorium-DC-LLC/buraaq.git
+cd buraaq
 ./install.sh
 buraaq doctor
 ```
 
-The installer copies packaged `dist/buraaq` and sidecars LLVM if clang is missing. Cargo exists only for people who *package* a new `dist/` (`scripts/pack-dist.ps1`).
+The installer copies packaged `dist/buraaq` and the stdlib sysroot next to it, then sidecars LLVM if clang is missing. Cargo exists only for people who *package* a new `dist/` (`scripts/pack-dist.ps1`).
 
 ---
 

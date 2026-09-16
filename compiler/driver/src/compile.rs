@@ -7,7 +7,7 @@ use buraaq_frontend::{analyze_project, Frontend};
 use buraaq_mir::{
     check_gfa, insert_drops, lower_program, lower_units, optimize, verify, LowerUnit, OptConfig,
 };
-use buraaq_pkg::Project;
+use buraaq_pkg::{discover_sysroot, Project};
 use buraaq_source::SourceFile;
 use thiserror::Error;
 
@@ -238,15 +238,25 @@ impl BuildOptions {
 }
 
 pub fn runtime_paths() -> Vec<PathBuf> {
+    const NAMES: &[&str] = &[
+        "buraaq_rt.c",
+        "buraaq_std.c",
+        "buraaq_grid.c",
+        "buraaq_hold.c",
+        "buraaq_stream.c",
+        "buraaq_runtime.c",
+        "buraaq_server.c",
+        "buraaq_lumen.c",
+    ];
     let driver = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    vec![
-        driver.join("../runtime/buraaq_rt.c"),
-        driver.join("../../stdlib/runtime/buraaq_std.c"),
-        driver.join("../../stdlib/runtime/buraaq_grid.c"),
-        driver.join("../../stdlib/runtime/buraaq_hold.c"),
-        driver.join("../../stdlib/runtime/buraaq_stream.c"),
-        driver.join("../../stdlib/runtime/buraaq_runtime.c"),
-        driver.join("../../stdlib/runtime/buraaq_server.c"),
-        driver.join("../../stdlib/runtime/buraaq_lumen.c"),
-    ]
+    let mut dirs = Vec::new();
+    if let Some(sys) = discover_sysroot(None) {
+        dirs.push(sys.join("runtime"));
+    }
+    dirs.push(driver.join("../runtime"));
+    dirs.push(driver.join("../../stdlib/runtime"));
+    NAMES
+        .iter()
+        .filter_map(|name| dirs.iter().map(|d| d.join(name)).find(|p| p.exists()))
+        .collect()
 }

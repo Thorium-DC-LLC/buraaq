@@ -19,6 +19,26 @@ fi
 echo "Using packaged compiler $SRC (Rust is not required)"
 cp "$SRC" "$PREFIX/buraaq"
 chmod +x "$PREFIX/buraaq"
+
+# discover_sysroot looks next to the binary: $PREFIX/sysroot/src/io.bq
+SYS="$PREFIX/sysroot"
+STDLIB="$ROOT/stdlib"
+if [ ! -f "$STDLIB/src/io.bq" ]; then
+  echo "stdlib missing under $STDLIB (needed next to the installed compiler)" >&2
+  exit 1
+fi
+mkdir -p "$SYS"
+for part in src runtime; do
+  rm -rf "$SYS/$part"
+  cp -R "$STDLIB/$part" "$SYS/$part"
+done
+if [ -f "$STDLIB/buraaq.pkg" ]; then
+  cp "$STDLIB/buraaq.pkg" "$SYS/buraaq.pkg"
+fi
+if [ -f "$ROOT/compiler/runtime/buraaq_rt.c" ]; then
+  cp "$ROOT/compiler/runtime/buraaq_rt.c" "$SYS/runtime/buraaq_rt.c"
+fi
+echo "Installed sysroot $SYS"
 if [ -x "$ROOT/scripts/ensure-llvm.sh" ]; then
   "$ROOT/scripts/ensure-llvm.sh" || true
 fi

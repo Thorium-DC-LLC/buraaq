@@ -27,6 +27,26 @@ $dst = Join-Path $Prefix "buraaq.exe"
 Copy-Item -Force $src $dst
 Write-Host "Installed $dst"
 
+# discover_sysroot looks next to the exe: <prefix>/sysroot/src/io.bq
+$sys = Join-Path $Prefix "sysroot"
+$stdlib = Join-Path $Root "stdlib"
+if (-not (Test-Path (Join-Path $stdlib "src\io.bq"))) {
+    throw "stdlib missing under $stdlib (needed next to the installed compiler)"
+}
+New-Item -ItemType Directory -Force -Path $sys | Out-Null
+foreach ($part in @("src", "runtime")) {
+    $from = Join-Path $stdlib $part
+    $to = Join-Path $sys $part
+    if (-not (Test-Path $from)) { throw "missing $from" }
+    if (Test-Path $to) { Remove-Item -Recurse -Force $to }
+    Copy-Item -Recurse $from $to
+}
+$pkg = Join-Path $stdlib "buraaq.pkg"
+if (Test-Path $pkg) { Copy-Item -Force $pkg (Join-Path $sys "buraaq.pkg") }
+$rt = Join-Path $Root "compiler\runtime\buraaq_rt.c"
+if (Test-Path $rt) { Copy-Item -Force $rt (Join-Path $sys "runtime\buraaq_rt.c") }
+Write-Host "Installed sysroot $sys"
+
 $ensure = Join-Path $Root "scripts\ensure-llvm.ps1"
 if (Test-Path $ensure) {
     & $ensure
