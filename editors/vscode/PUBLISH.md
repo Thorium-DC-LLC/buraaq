@@ -22,7 +22,7 @@ $env:VSCE_PAT = "<paste-pat>"
 npx vsce publish
 ```
 
-Or add GitHub secret `VSCE_PAT` on `Thorium-DC/buraaq`, then run workflow **Publish VS Code extension**.
+Or add GitHub secret `VSCE_PAT` on `ThoriumDC/buraaq`, then run workflow **Publish VS Code extension**.
 
 After publish, users install with:
 
@@ -35,5 +35,5 @@ or search **Buraaq** in the Extensions view.
 ## Until Marketplace is live
 
 ```powershell
-code --install-extension https://github.com/Thorium-DC-LLC/buraaq/releases/latest/download/buraaq-1.0.0.vsix
+code --install-extension https://github.com/ThoriumDC/buraaq/releases/latest/download/buraaq-1.0.0.vsix
 ```
