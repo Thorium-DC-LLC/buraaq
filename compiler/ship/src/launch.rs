@@ -7,6 +7,8 @@ use thiserror::Error;
 
 use crate::bundle::{extract_to, unpack, Bundle, BundleError};
 use crate::paths::{dock_root, live_dir, run_dir};
+#[cfg(unix)]
+use crate::paths::home_dir;
 
 #[derive(Debug, Error)]
 pub enum LaunchError {
@@ -65,6 +67,11 @@ pub fn launch_extracted(bundle: &Bundle, dir: &Path, mode: LaunchMode) -> Result
         }
         LaunchMode::Background => {
             fs::create_dir_all(dir)?;
+            if let Some(pid) = try_systemd_supervise(&bundle.name, &exe, dir) {
+                fs::write(dir.join("app.pid"), pid.to_string())?;
+                fs::write(dir.join("supervisor"), "systemd")?;
+                return Ok(pid);
+            }
             let log_path = dir.join("app.log");
             let log = File::create(&log_path)?;
             let err = log.try_clone()?;
@@ -75,6 +82,7 @@ pub fn launch_extracted(bundle: &Bundle, dir: &Path, mode: LaunchMode) -> Result
                 .spawn()?;
             let pid = child.id();
             fs::write(dir.join("app.pid"), pid.to_string())?;
+            fs::write(dir.join("supervisor"), "process")?;
             // Detach: forget the Child so Drop does not wait/kill.
             std::mem::forget(child);
             Ok(pid)
@@ -147,7 +155,137 @@ fn command_for_app(exe: &Path, dir: &Path) -> Command {
     cmd
 }
 
+pub(crate) fn app_unit_name(app: &str) -> String {
+    format!("buraaq-app-{app}.service")
+}
+
+pub(crate) fn app_unit_text(
+    name: &str,
+    exe: &Path,
+    dir: &Path,
+    env_file: &Path,
+    wanted_by: &str,
+) -> String {
+    format!(
+        "[Unit]\n\
+         Description=Buraaq app {name}\n\
+         After=network-online.target\n\
+         Wants=network-online.target\n\
+         \n\
+         [Service]\n\
+         Type=simple\n\
+         WorkingDirectory={dir}\n\
+         EnvironmentFile=-{env}\n\
+         ExecStart={exe}\n\
+         Restart=always\n\
+         RestartSec=3\n\
+         \n\
+         [Install]\n\
+         WantedBy={wanted}\n",
+        name = name,
+        dir = dir.display(),
+        env = env_file.display(),
+        exe = exe.display(),
+        wanted = wanted_by,
+    )
+}
+
+fn try_systemd_supervise(name: &str, exe: &Path, dir: &Path) -> Option<u32> {
+    #[cfg(not(unix))]
+    {
+        let _ = (name, exe, dir);
+        None
+    }
+    #[cfg(unix)]
+    {
+        if !systemctl_ok(&["--version"]) {
+            eprintln!("buraaq ship: no systemd — app will not restart if it exits");
+            return None;
+        }
+        let unit = app_unit_name(name);
+        let env = dock_root().join("env");
+        let root = uid_zero();
+        let (unit_path, wanted, extra): (std::path::PathBuf, &str, &[&str]) = if root {
+            (
+                Path::new("/etc/systemd/system").join(&unit),
+                "multi-user.target",
+                &[],
+            )
+        } else {
+            let diru = home_dir().join(".config/systemd/user");
+            let _ = fs::create_dir_all(&diru);
+            (diru.join(&unit), "default.target", &["--user"])
+        };
+        let text = app_unit_text(name, exe, dir, &env, wanted);
+        if fs::write(&unit_path, text).is_err() {
+            eprintln!(
+                "buraaq ship: cannot write {} — app will not restart if it exits",
+                unit_path.display()
+            );
+            return None;
+        }
+        let _ = systemctl_ok(&[extra, &["daemon-reload"]].concat());
+        if !systemctl_ok(&[extra, &["enable", "--now", &unit]].concat()) {
+            eprintln!("buraaq ship: systemctl enable --now {unit} failed — falling back to a raw process");
+            return None;
+        }
+        let pid = systemd_main_pid(extra, &unit).unwrap_or(1);
+        eprintln!("buraaq ship: systemd Restart=always ({unit} pid={pid})");
+        Some(pid)
+    }
+}
+
+#[cfg(unix)]
+fn uid_zero() -> bool {
+    Command::new("id")
+        .arg("-u")
+        .output()
+        .ok()
+        .and_then(|o| String::from_utf8(o.stdout).ok())
+        .map(|s| s.trim() == "0")
+        .unwrap_or(false)
+}
+
+#[cfg(unix)]
+fn systemctl_ok(args: &[&str]) -> bool {
+    Command::new("systemctl")
+        .args(args)
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .status()
+        .map(|s| s.success())
+        .unwrap_or(false)
+}
+
+#[cfg(unix)]
+fn systemd_main_pid(extra: &[&str], unit: &str) -> Option<u32> {
+    let out = Command::new("systemctl")
+        .args(extra)
+        .args(["show", "-p", "MainPID", "--value", unit])
+        .output()
+        .ok()?;
+    let s = String::from_utf8(out.stdout).ok()?;
+    let pid = s.trim().parse::<u32>().ok()?;
+    if pid == 0 {
+        None
+    } else {
+        Some(pid)
+    }
+}
+
+#[cfg(unix)]
+fn systemd_stop(name: &str) {
+    let unit = app_unit_name(name);
+    if uid_zero() {
+        let _ = systemctl_ok(&["stop", &unit]);
+    } else {
+        let _ = systemctl_ok(&["--user", "stop", &unit]);
+    }
+}
+
 pub fn replace_live(bundle: &Bundle, bytes: &[u8]) -> Result<u32, LaunchError> {
+    #[cfg(unix)]
+    systemd_stop(&bundle.name);
     let live = live_dir(&bundle.name);
     if live.join("app.pid").is_file() {
         if let Ok(s) = fs::read_to_string(live.join("app.pid")) {
@@ -166,6 +304,8 @@ pub fn replace_live(bundle: &Bundle, bytes: &[u8]) -> Result<u32, LaunchError> {
 }
 
 pub fn stop_named(name: &str) -> Result<(), LaunchError> {
+    #[cfg(unix)]
+    systemd_stop(name);
     let pid_path = live_dir(name).join("app.pid");
     if !pid_path.is_file() {
         return Ok(());
@@ -230,7 +370,8 @@ pub fn list_live() -> io::Result<Vec<(String, String, Option<u32>)>> {
 
 #[cfg(test)]
 mod tests {
-    use super::parse_env_file;
+    use super::{app_unit_name, app_unit_text, parse_env_file};
+    use std::path::Path;
 
     #[test]
     fn parse_env_file_skips_comments_and_empty() {
@@ -248,5 +389,21 @@ mod tests {
             ]
         );
         assert!(!pairs.iter().any(|(k, _)| k == "BURAAQ_API_KEY"));
+    }
+
+    #[test]
+    fn systemd_unit_restarts_always_and_loads_host_env() {
+        assert_eq!(app_unit_name("forge"), "buraaq-app-forge.service");
+        let text = app_unit_text(
+            "forge",
+            Path::new("/root/.buraaq/dock/live/forge/bin/forge"),
+            Path::new("/root/.buraaq/dock/live/forge"),
+            Path::new("/root/.buraaq/dock/env"),
+            "multi-user.target",
+        );
+        assert!(text.contains("Restart=always"), "{text}");
+        assert!(text.contains("EnvironmentFile=-/root/.buraaq/dock/env"), "{text}");
+        assert!(text.contains("ExecStart=/root/.buraaq/dock/live/forge/bin/forge"), "{text}");
+        assert!(text.contains("WantedBy=multi-user.target"), "{text}");
     }
 }

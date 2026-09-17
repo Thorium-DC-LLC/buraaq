@@ -17,6 +17,9 @@
 #include <ws2tcpip.h>
 #include <windows.h>
 #include <direct.h>
+#include <io.h>
+#include <sys/stat.h>
+#include <process.h>
 #define bq_ncasecmp _strnicmp
 typedef SOCKET bq_sock;
 #define BQ_INVALID INVALID_SOCKET
@@ -34,6 +37,7 @@ typedef SOCKET bq_sock;
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <dlfcn.h>
+#include <sys/wait.h>
 #define bq_ncasecmp strncasecmp
 typedef int bq_sock;
 #define BQ_INVALID (-1)
@@ -113,6 +117,7 @@ typedef struct {
 typedef struct {
     int in_use;
     int https;
+    int peer_loopback;
     bq_sock fd;
     void *ssl;
     char method[16];
@@ -129,8 +134,43 @@ static int g_wsa = 0;
 static char g_cors_origin[1024];
 static char g_api_key[128];
 static int g_api_lock = 0;
+static int g_public = 0;
 static int g_http_port = 8080;
 static int g_tls_port = 8443;
+
+static int env_flag(const char *name) {
+    const char *v = getenv(name);
+    if (!v || !v[0]) return 0;
+    return v[0] == '1' || v[0] == 'y' || v[0] == 'Y' || v[0] == 't' || v[0] == 'T';
+}
+
+static int env_flag_default(const char *name, int fallback) {
+    const char *v = getenv(name);
+    if (!v || !v[0]) return fallback;
+    if (v[0] == '0' || v[0] == 'n' || v[0] == 'N' || v[0] == 'f' || v[0] == 'F') return 0;
+    return env_flag(name) ? 1 : fallback;
+}
+
+/* Local by default. BURAAQ_PUBLIC=1 or BURAAQ_BIND=0.0.0.0 for every interface. */
+static uint32_t bq_listen_addr(void) {
+    const char *bind = getenv("BURAAQ_BIND");
+    if (bind && bind[0]) {
+        if (strcmp(bind, "0.0.0.0") == 0 || strcmp(bind, "*") == 0) {
+            g_public = 1;
+            return INADDR_ANY;
+        }
+        if (strcmp(bind, "127.0.0.1") == 0 || strcmp(bind, "localhost") == 0) {
+            g_public = 0;
+            return htonl(INADDR_LOOPBACK);
+        }
+    }
+    if (env_flag("BURAAQ_PUBLIC")) {
+        g_public = 1;
+        return INADDR_ANY;
+    }
+    g_public = 0;
+    return htonl(INADDR_LOOPBACK);
+}
 
 static int sock_init(void) {
 #ifdef _WIN32
@@ -156,6 +196,7 @@ typedef struct {
     int (*SSL_CTX_use_certificate_file)(void *, const char *, int);
     int (*SSL_CTX_use_PrivateKey_file)(void *, const char *, int);
     int (*SSL_CTX_check_private_key)(const void *);
+    long (*SSL_CTX_ctrl)(void *, int, long, void *);
     void *(*SSL_new)(void *);
     int (*SSL_set_fd)(void *, int);
     int (*SSL_accept)(void *);
@@ -232,6 +273,7 @@ static int ssl_load(void) {
     SSL_SYM(SSL_CTX_use_certificate_file);
     SSL_SYM(SSL_CTX_use_PrivateKey_file);
     SSL_SYM(SSL_CTX_check_private_key);
+    SSL_SYM(SSL_CTX_ctrl);
     SSL_SYM(SSL_new);
     SSL_SYM(SSL_set_fd);
     SSL_SYM(SSL_accept);
@@ -250,12 +292,19 @@ static int ssl_load(void) {
     if (!key || !key[0]) key = "key.pem";
     g_ssl.ctx = g_ssl.SSL_CTX_new(g_ssl.TLS_server_method());
     if (!g_ssl.ctx) return 0;
+    /* SSL_CTRL_SET_MIN_PROTO_VERSION=123, TLS1_2_VERSION=0x0303 */
+    if (g_ssl.SSL_CTX_ctrl) g_ssl.SSL_CTX_ctrl(g_ssl.ctx, 123, 0x0303, NULL);
     if (g_ssl.SSL_CTX_use_certificate_file(g_ssl.ctx, cert, 1 /* SSL_FILETYPE_PEM */) != 1) {
         g_ssl.SSL_CTX_free(g_ssl.ctx);
         g_ssl.ctx = NULL;
         return 0;
     }
     if (g_ssl.SSL_CTX_use_PrivateKey_file(g_ssl.ctx, key, 1) != 1) {
+        g_ssl.SSL_CTX_free(g_ssl.ctx);
+        g_ssl.ctx = NULL;
+        return 0;
+    }
+    if (g_ssl.SSL_CTX_check_private_key && g_ssl.SSL_CTX_check_private_key(g_ssl.ctx) != 1) {
         g_ssl.SSL_CTX_free(g_ssl.ctx);
         g_ssl.ctx = NULL;
         return 0;
@@ -399,7 +448,7 @@ int32_t buraaq_http_listen(int32_t port, int32_t https) {
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    addr.sin_addr.s_addr = bq_listen_addr();
     addr.sin_port = htons((uint16_t)port);
     if (bind(fd, (struct sockaddr *)&addr, sizeof(addr)) == SOCKET_ERROR) {
         bq_close_sock(fd);
@@ -461,6 +510,7 @@ int32_t buraaq_http_accept(int32_t unused_listener) {
     c->in_use = 1;
     c->fd = cfd;
     c->https = ls->https;
+    c->peer_loopback = peer.sin_addr.s_addr == htonl(INADDR_LOOPBACK) ? 1 : 0;
     c->body = dup_empty();
     if (c->https) {
         if (!ssl_load() || !g_ssl.ctx) {
@@ -559,7 +609,7 @@ int32_t buraaq_http_reply(int32_t id, int32_t status, const char *ctype, const c
             }
         }
     } else if (c->origin[0] && g_cors_origin[0] == 0) {
-        acao = "*";
+        acao = NULL;
     }
     char hdr[1024];
     int blen = (int)strlen(body);
@@ -782,7 +832,6 @@ static void pg_load_host_env(void) {
         pg_load_env_file(path);
     }
     pg_load_env_file("forge.env");
-    pg_load_env_file(".env");
 }
 
 static void pg_tune_conninfo(const char *in, char *out, size_t n) {
@@ -794,7 +843,8 @@ static void pg_tune_conninfo(const char *in, char *out, size_t n) {
         if (uri) strncat(out, strchr(out, '?') ? "&sslmode=require" : "?sslmode=require", n - strlen(out) - 1);
         else strncat(out, " sslmode=require", n - strlen(out) - 1);
     }
-    if (!strstr(out, "channel_binding") && (neon || strstr(out, "sslmode=require"))) {
+    if (!strstr(out, "channel_binding") && getenv("BURAAQ_PG_CHANNEL_BINDING") &&
+        strstr(getenv("BURAAQ_PG_CHANNEL_BINDING"), "disable")) {
         if (uri) strncat(out, strchr(out, '?') ? "&channel_binding=disable" : "?channel_binding=disable", n - strlen(out) - 1);
         else strncat(out, " channel_binding=disable", n - strlen(out) - 1);
     }
@@ -987,9 +1037,14 @@ static int g_napis = 0;
 static char g_store_url[1024];
 static int g_store_set = 0;
 
-static int path_has_dotdot(const char *s) {
-    if (!s) return 0;
-    return strstr(s, "..") != NULL;
+static int path_is_safe_file(const char *s) {
+    if (!s || !s[0]) return 0;
+    if (s[0] == '/' || s[0] == '\\') return 0;
+#ifdef _WIN32
+    if (((s[0] >= 'A' && s[0] <= 'Z') || (s[0] >= 'a' && s[0] <= 'z')) && s[1] == ':') return 0;
+#endif
+    if (strstr(s, "..") != NULL) return 0;
+    return 1;
 }
 
 static int env_int(const char *name, int fallback) {
@@ -999,25 +1054,39 @@ static int env_int(const char *name, int fallback) {
     return n > 0 && n < 65536 ? n : fallback;
 }
 
-static void svc_random_key(char *out, size_t cap) {
+static int svc_random_key(char *out, size_t cap) {
     unsigned char raw[16];
     memset(raw, 0, sizeof(raw));
+    int got = 0;
 #ifdef _WIN32
     typedef unsigned char (WINAPI *RtlGenRandomFn)(void *, unsigned long);
     HMODULE adv = LoadLibraryA("advapi32.dll");
     if (adv) {
         RtlGenRandomFn fn = (RtlGenRandomFn)GetProcAddress(adv, "SystemFunction036");
-        if (fn) fn(raw, (ULONG)sizeof(raw));
+        if (fn && fn(raw, (ULONG)sizeof(raw))) got = 1;
         FreeLibrary(adv);
     }
 #else
     FILE *ur = fopen("/dev/urandom", "rb");
     if (ur) {
-        size_t _n = fread(raw, 1, sizeof(raw), ur);
-        (void)_n;
+        size_t n = fread(raw, 1, sizeof(raw), ur);
         fclose(ur);
+        if (n == sizeof(raw)) got = 1;
     }
 #endif
+    if (!got) {
+        out[0] = 0;
+        return 0;
+    }
+    {
+        int allz = 1;
+        size_t i;
+        for (i = 0; i < sizeof(raw); i++) if (raw[i]) allz = 0;
+        if (allz) {
+            out[0] = 0;
+            return 0;
+        }
+    }
     static const char *hexd = "0123456789abcdef";
     size_t i;
     for (i = 0; i < sizeof(raw) && (i * 2 + 1) < cap; i++) {
@@ -1025,6 +1094,7 @@ static void svc_random_key(char *out, size_t cap) {
         out[i * 2 + 1] = hexd[raw[i] & 0xf];
     }
     out[i * 2] = 0;
+    return 1;
 }
 
 static void svc_ensure_api_key(void) {
@@ -1048,12 +1118,21 @@ static void svc_ensure_api_key(void) {
         }
         if (g_api_key[0]) return;
     }
-    svc_random_key(g_api_key, sizeof(g_api_key));
+    if (!svc_random_key(g_api_key, sizeof(g_api_key))) {
+        fprintf(stderr, "buraaq service: cannot generate API key (RNG failed)\n");
+        g_api_key[0] = 0;
+        return;
+    }
     f = fopen(".buraaq/api.key", "wb");
     if (f) {
         fputs(g_api_key, f);
         fputc('\n', f);
         fclose(f);
+#ifdef _WIN32
+        _chmod(".buraaq/api.key", _S_IREAD | _S_IWRITE);
+#else
+        chmod(".buraaq/api.key", 0600);
+#endif
     }
 }
 
@@ -1070,35 +1149,43 @@ static int svc_ensure_tls_files(const char *cert, const char *key) {
     const char *openssl = "openssl";
 #ifdef _WIN32
     if (GetFileAttributesA("C:\\Program Files\\Git\\usr\\bin\\openssl.exe") != INVALID_FILE_ATTRIBUTES) {
-        openssl = "\"C:\\Program Files\\Git\\usr\\bin\\openssl.exe\"";
+        openssl = "C:\\Program Files\\Git\\usr\\bin\\openssl.exe";
     }
 #endif
-    char cmd[1024];
-    snprintf(
-        cmd,
-        sizeof(cmd),
-        "%s req -x509 -newkey rsa:2048 -keyout \"%s\" -out \"%s\" -days 365 -nodes -subj \"/CN=localhost\"",
-        openssl,
-        key,
-        cert
-    );
+    if (!path_is_safe_file(cert) || !path_is_safe_file(key)) return 0;
 #ifdef _WIN32
-    strncat(cmd, " >nul 2>nul", sizeof(cmd) - strlen(cmd) - 1);
-#else
-    strncat(cmd, " >/dev/null 2>&1", sizeof(cmd) - strlen(cmd) - 1);
-#endif
-    if (system(cmd) == 0) {
-        fc = fopen(cert, "rb");
-        fk = fopen(key, "rb");
-        if (fc && fk) {
-            fclose(fc);
-            fclose(fk);
-            fprintf(stdout, "generated %s and %s\n", cert, key);
-            return 1;
-        }
-        if (fc) fclose(fc);
-        if (fk) fclose(fk);
+    {
+        const char *args[] = {
+            openssl, "req", "-x509", "-newkey", "rsa:2048",
+            "-keyout", key, "-out", cert, "-days", "365", "-nodes",
+            "-subj", "/CN=localhost", NULL
+        };
+        if (_spawnvp(_P_WAIT, openssl, args) != 0) return 0;
     }
+#else
+    {
+        pid_t pid = fork();
+        if (pid == 0) {
+            execlp("openssl", "openssl", "req", "-x509", "-newkey", "rsa:2048",
+                   "-keyout", key, "-out", cert, "-days", "365", "-nodes",
+                   "-subj", "/CN=localhost", (char *)NULL);
+            _exit(127);
+        }
+        if (pid < 0) return 0;
+        int st = 0;
+        if (waitpid(pid, &st, 0) < 0 || !WIFEXITED(st) || WEXITSTATUS(st) != 0) return 0;
+    }
+#endif
+    fc = fopen(cert, "rb");
+    fk = fopen(key, "rb");
+    if (fc && fk) {
+        fclose(fc);
+        fclose(fk);
+        fprintf(stdout, "generated %s and %s\n", cert, key);
+        return 1;
+    }
+    if (fc) fclose(fc);
+    if (fk) fclose(fk);
     return 0;
 }
 
@@ -1115,7 +1202,9 @@ static int svc_self_origin(const char *origin) {
 
 static int svc_write_allowed(Conn *c) {
     if (!g_api_key[0]) return 1;
-    if (!g_api_lock && svc_self_origin(c->origin)) return 1;
+    if (g_api_lock) return ct_eq_str(c->apikey, g_api_key);
+    /* Same-origin pages on loopback may write without a header. Origin is never auth from the network. */
+    if (c->peer_loopback && svc_self_origin(c->origin)) return 1;
     return ct_eq_str(c->apikey, g_api_key);
 }
 
@@ -1327,7 +1416,7 @@ static void svc_handle(int32_t conn) {
 
 int32_t buraaq_svc_page(const char *path, const char *file) {
     if (!path || !file || g_npages >= BQ_SVC_MAX_PAGE) return 0;
-    if (path_has_dotdot(file) || path_has_dotdot(path)) return 0;
+    if (path_is_safe_file(file) == 0 || strstr(path ? path : "", "..") != NULL) return 0;
     SvcPage *p = &g_pages[g_npages++];
     memset(p, 0, sizeof(*p));
     strncpy(p->path, path, sizeof(p->path) - 1);
@@ -1394,13 +1483,14 @@ int32_t buraaq_svc_run(int32_t port) {
     if (cors_env && cors_env[0] && !g_cors_origin[0]) {
         strncpy(g_cors_origin, cors_env, sizeof(g_cors_origin) - 1);
     }
-    const char *lock = getenv("BURAAQ_API_LOCK");
-    if (lock && (strcmp(lock, "1") == 0 || bq_ncasecmp(lock, "true", 4) == 0)) g_api_lock = 1;
+    (void)bq_listen_addr();
+    g_api_lock = g_public ? 1 : 0;
+    g_api_lock = env_flag_default("BURAAQ_API_LOCK", g_api_lock);
     svc_ensure_api_key();
     if (g_api_key[0]) {
-        fprintf(stdout, "api key %s\n", g_api_key);
         fprintf(stdout, "api key file .buraaq/api.key\n");
-        fprintf(stdout, "X-Api-Key required for cross-origin and curl writes\n");
+        fprintf(stdout, "X-Api-Key required for curl writes (loopback pages are same-origin)\n");
+        if (g_api_lock) fprintf(stdout, "API lock on (reads need the key too)\n");
     }
     const char *cert = getenv("BURAAQ_TLS_CERT");
     const char *keyp = getenv("BURAAQ_TLS_KEY");
@@ -1410,11 +1500,13 @@ int32_t buraaq_svc_run(int32_t port) {
     g_tls_port = port > 0 ? port : env_int("BURAAQ_TLS_PORT", 8443);
     g_http_port = g_tls_port == 443 ? 80 : env_int("BURAAQ_HTTP_PORT", 8080);
     int https_ok = buraaq_http_listen(g_tls_port, 1);
-    int http_ok = buraaq_http_listen(g_http_port, 0);
-    if (https_ok) fprintf(stdout, "https://127.0.0.1:%d\n", g_tls_port);
+    int want_http = !g_public || env_flag("BURAAQ_HTTP") || !https_ok;
+    int http_ok = want_http ? buraaq_http_listen(g_http_port, 0) : 0;
+    const char *shown = g_public ? "0.0.0.0" : "127.0.0.1";
+    if (https_ok) fprintf(stdout, "https://%s:%d\n", shown, g_tls_port);
     else fprintf(stderr, "buraaq service: TLS not bound on %d (need cert.pem + key.pem)\n", g_tls_port);
-    if (http_ok) fprintf(stdout, "http://127.0.0.1:%d\n", g_http_port);
-    else fprintf(stderr, "buraaq service: HTTP not bound on %d\n", g_http_port);
+    if (http_ok) fprintf(stdout, "http://%s:%d\n", shown, g_http_port);
+    else if (want_http) fprintf(stderr, "buraaq service: HTTP not bound on %d\n", g_http_port);
     if (!https_ok && !http_ok) return 0;
     fprintf(stdout, "service ready\n");
     for (;;) {

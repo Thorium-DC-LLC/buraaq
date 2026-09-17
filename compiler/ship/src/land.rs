@@ -86,8 +86,8 @@ fn next_txt(cloud: Cloud) -> String {
          3. On the host:  bash land.sh\n\
          4. Copy ~/.buraaq/dock/token (or BURAAQ_DOCK_TOKEN) to your laptop.\n\
          5. Copy env.example to ~/.buraaq/dock/env and set BURAAQ_DATABASE_URL\n\
-            (Postgres next to the app. Neon: sslmode=require. Dock copies this into\n\
-            every launched ship so Keel can reconnect after the pooler drops idle).\n\
+            (one file; Neon: sslmode=require). That is the only host config.\n\
+            `buraaq ship HOST` then installs systemd Restart=always for the app.\n\
          6. From the project on Linux:  buraaq pack && buraaq ship HOST\n\n\
          Same path on AWS, Azure, GCP, Hetzner, and a rack. The cloud is a hostname.\n",
         label = cloud.label(),
@@ -149,6 +149,7 @@ mkdir -p "$HOME/.buraaq/dock"
 if [ ! -f "$HOME/.buraaq/dock/env" ]; then
   cat > "$HOME/.buraaq/dock/env" <<'ENV'
 # Postgres for Keel apps launched by Dock. Neon: sslmode=require.
+# This is the only host file you edit. Ship copies it into every app.
 # BURAAQ_DATABASE_URL=
 # BURAAQ_API_KEY=
 ENV
@@ -163,28 +164,53 @@ load_dock_env() {
     set +a
   fi
 }
-UNIT_DIR="$HOME/.config/systemd/user"
-if command -v systemctl >/dev/null 2>&1; then
-  mkdir -p "$UNIT_DIR"
-  cat > "$UNIT_DIR/buraaq-dock.service" <<'UNIT'
+start_dock_systemd() {
+  if [ "$(id -u)" = 0 ] && [ -d /etc/systemd/system ]; then
+    cat > /etc/systemd/system/buraaq-dock.service <<'UNIT'
+[Unit]
+Description=Buraaq Dock
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=buraaq dock --public
+Restart=always
+RestartSec=3
+EnvironmentFile=-/root/.buraaq/dock/env
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+    systemctl daemon-reload
+    systemctl enable --now buraaq-dock.service
+    echo "Dock systemd unit: buraaq-dock.service (Restart=always)"
+    return 0
+  fi
+  if command -v systemctl >/dev/null 2>&1; then
+    UNIT_DIR="$HOME/.config/systemd/user"
+    mkdir -p "$UNIT_DIR"
+    cat > "$UNIT_DIR/buraaq-dock.service" <<'UNIT'
 [Unit]
 Description=Buraaq Dock
 After=network.target
 
 [Service]
 ExecStart=buraaq dock --public
-Restart=on-failure
+Restart=always
+RestartSec=3
 EnvironmentFile=-%h/.buraaq/dock/env
 
 [Install]
 WantedBy=default.target
 UNIT
-  systemctl --user daemon-reload || true
-  systemctl --user enable --now buraaq-dock.service || {
-    echo "user systemd not available; starting Dock in the background"
-    load_dock_env
-    nohup buraaq dock --public >/tmp/buraaq-dock.log 2>&1 &
-  }
+    loginctl enable-linger "$(id -un)" 2>/dev/null || true
+    systemctl --user daemon-reload || true
+    systemctl --user enable --now buraaq-dock.service && return 0
+  fi
+  return 1
+}
+if command -v systemctl >/dev/null 2>&1 && start_dock_systemd; then
+  :
 else
   load_dock_env
   nohup buraaq dock --public >/tmp/buraaq-dock.log 2>&1 &
@@ -192,6 +218,8 @@ else
 fi
 echo "Dock should answer on :7422"
 echo "Token: $HOME/.buraaq/dock/token"
+echo "One config file: $HOME/.buraaq/dock/env  (BURAAQ_DATABASE_URL). Then: buraaq ship HOST"
+echo "Apps get systemd Restart=always when you ship. Do not nohup the Keel binary by hand."
 echo "App TLS is Keel on 8443. Control plane is HTTP + token — put a reverse proxy in front if this host is public."
 echo "If this is Hetzner: allow TCP 7422, 8080, 8443 on the Cloud Firewall."
 "#;
@@ -202,7 +230,7 @@ After=network.target
 
 [Service]
 ExecStart=buraaq dock --public
-Restart=on-failure
+Restart=always
 EnvironmentFile=-%h/.buraaq/dock/env
 
 [Install]
@@ -232,6 +260,8 @@ mod tests {
         assert!(sh.contains("EnvironmentFile"), "{sh}");
         assert!(sh.contains("libpq5"), "{sh}");
         assert!(sh.contains("load_dock_env"), "{sh}");
+        assert!(sh.contains("Restart=always"), "{sh}");
+        assert!(sh.contains("/etc/systemd/system"), "{sh}");
         let cloud = fs::read_to_string(dir.join("cloud.txt")).unwrap();
         assert!(cloud.contains("Hetzner"), "{cloud}");
         let env = fs::read_to_string(dir.join("env.example")).unwrap();

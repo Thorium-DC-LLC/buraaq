@@ -1,6 +1,7 @@
 use std::fs;
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
+use std::time::Duration;
 
 #[cfg(windows)]
 #[link(name = "advapi32")]
@@ -40,14 +41,16 @@ pub fn serve_dock(opts: DockOptions) -> Result<(), String> {
 }
 
 fn handle_conn(mut s: TcpStream, token: &str) -> Result<(), String> {
+    let _ = s.set_read_timeout(Some(Duration::from_secs(15)));
+    let _ = s.set_write_timeout(Some(Duration::from_secs(15)));
     let mut head = Vec::new();
-    let mut tmp = [0u8; 1];
+    let mut tmp = [0u8; 4096];
     while head.len() < 64 * 1024 {
         let n = s.read(&mut tmp).map_err(|e| e.to_string())?;
         if n == 0 {
             break;
         }
-        head.push(tmp[0]);
+        head.extend_from_slice(&tmp[..n]);
         if head.windows(4).any(|w| w == b"\r\n\r\n") {
             break;
         }
@@ -74,8 +77,9 @@ fn handle_conn(mut s: TcpStream, token: &str) -> Result<(), String> {
         if let Some(v) = l.strip_prefix("content-length:") {
             content_len = v.trim().parse().unwrap_or(0);
         }
-        if let Some(v) = line.strip_prefix("Authorization:") {
-            auth = v.trim().to_string();
+        if let Some(v) = l.strip_prefix("authorization:") {
+            auth = line.split_once(':').map(|(_, r)| r.trim().to_string()).unwrap_or_default();
+            let _ = v;
         }
     }
     let extra = head.len().saturating_sub(header_end + 4);
@@ -94,6 +98,9 @@ fn handle_conn(mut s: TcpStream, token: &str) -> Result<(), String> {
             break;
         }
         body.extend_from_slice(&buf[..n]);
+    }
+    if content_len > 0 && body.len() != content_len {
+        return reply(&mut s, 400, "truncated body");
     }
 
     if method == "GET" && path == "/v1/health" {

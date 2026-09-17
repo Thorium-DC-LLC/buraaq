@@ -129,8 +129,9 @@ On Windows, `~` is `%USERPROFILE%`.
 1. Write a Keel program (`page` / `api` / `run`). `public/`, `cert.pem`, and `key.pem` in the project root are packed automatically.
 2. Locally: `buraaq up` (pack + local Dock + run).
 3. On the host: `buraaq land user@HOST --cloud hetzner` then pack **on that OS** and `buraaq ship HOST`.
-4. Users hit `http://HOST:8080` and `https://HOST:8443`. Dock `:7422` is control only — prefer loopback + SSH tunnel on public machines.
-5. Secrets (`BURAAQ_DATABASE_URL`, dock token) stay on the **host**. Never in git.
+4. The only host file you edit is `~/.buraaq/dock/env` (`BURAAQ_DATABASE_URL`). Do not `nohup` the Keel binary. Land + ship install **systemd `Restart=always`** so a crash or idle-DB drop comes back.
+5. Users hit `http://HOST:8080` and `https://HOST:8443`. Dock `:7422` is control only — prefer loopback + SSH tunnel on public machines.
+6. Secrets stay on the **host**. Never in git.
 
 A Windows `.bur` will not run on Linux. `buraaq build --release --emit-ir --target linux` emits IR for a Linux clang link when you cannot pack on the host.
 
