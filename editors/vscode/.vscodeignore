@@ -7,3 +7,4 @@ tsconfig.json
 **/*.ts
 *.vsix
 PUBLISH.md
+media/icon-source.png
