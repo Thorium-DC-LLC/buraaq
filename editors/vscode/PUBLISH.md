@@ -35,5 +35,5 @@ or search **Buraaq** in the Extensions view.
 ## Until Marketplace is live
 
 ```powershell
-code --install-extension https://github.com/Thorium-DC/buraaq/releases/latest/download/buraaq-1.0.0.vsix
+code --install-extension https://github.com/Thorium-DC-LLC/buraaq/releases/latest/download/buraaq-1.0.0.vsix
 ```

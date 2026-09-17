@@ -1,6 +1,6 @@
 # Buraaq 1.0
 
-[![Release](https://img.shields.io/github/v/release/Thorium-DC/buraaq)](https://github.com/Thorium-DC/buraaq/releases/latest)
+[![Release](https://img.shields.io/github/v/release/Thorium-DC-LLC/buraaq)](https://github.com/Thorium-DC-LLC/buraaq/releases/latest)
 [![License: MIT](https://img.shields.io/badge/license-MIT-22d3ee.svg)](LICENSE)
 
 **Write like Python. Run like C.**
@@ -39,17 +39,17 @@ winget install buraaq
 buraaq doctor
 ```
 
-Until the winget PR is merged, install from the [latest GitHub Release](https://github.com/Thorium-DC/buraaq/releases/latest) zip (`buraaq-*-windows-x64.zip`: exe + sysroot), or:
+Until the winget PR is merged, install from the [latest GitHub Release](https://github.com/Thorium-DC-LLC/buraaq/releases/latest) zip (`buraaq-*-windows-x64.zip`: exe + sysroot), or:
 
 ```powershell
-git clone https://github.com/Thorium-DC/buraaq.git
+git clone https://github.com/Thorium-DC-LLC/buraaq.git
 cd buraaq
 .\install.ps1
 buraaq doctor
 ```
 
 ```bash
-git clone https://github.com/Thorium-DC/buraaq.git
+git clone https://github.com/Thorium-DC-LLC/buraaq.git
 cd buraaq
 ./install.sh
 buraaq doctor

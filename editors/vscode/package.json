@@ -12,11 +12,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Thorium-DC/buraaq.git"
+    "url": "https://github.com/Thorium-DC-LLC/buraaq.git"
   },
   "homepage": "https://buraaq.dev",
   "bugs": {
-    "url": "https://github.com/Thorium-DC/buraaq/issues"
+    "url": "https://github.com/Thorium-DC-LLC/buraaq/issues"
   },
   "qna": "marketplace",
   "engines": {
