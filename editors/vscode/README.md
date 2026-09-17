@@ -14,13 +14,13 @@ Language support for `.bq` files via **`buraaq lsp-server`**.
 
 ## Install
 
-Marketplace (after publish):
+From the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=ThoriumDC.buraaq):
 
 ```text
 ext install ThoriumDC.buraaq
 ```
 
-Or from the GitHub Release:
+Or from the GitHub Release VSIX:
 
 ```powershell
 code --install-extension https://github.com/ThoriumDC/buraaq/releases/latest/download/buraaq-1.0.0.vsix

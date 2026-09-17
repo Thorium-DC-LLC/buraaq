@@ -24,16 +24,16 @@ npx vsce publish
 
 Or add GitHub secret `VSCE_PAT` on `ThoriumDC/buraaq`, then run workflow **Publish VS Code extension**.
 
-After publish, users install with:
+Published listing: [marketplace.visualstudio.com/items?itemName=ThoriumDC.buraaq](https://marketplace.visualstudio.com/items?itemName=ThoriumDC.buraaq)
+
+Users install with:
 
 ```text
 ext install ThoriumDC.buraaq
 ```
 
-or search **Buraaq** in the Extensions view.
+or search **Buraaq** in the Extensions view. Offline/CI fallback: the Release VSIX.
 
-## Until Marketplace is live
+## Republish
 
-```powershell
-code --install-extension https://github.com/ThoriumDC/buraaq/releases/latest/download/buraaq-1.0.0.vsix
-```
+Bump `version` in `package.json`, then `npx vsce publish` (or the GitHub Actions workflow) with a fresh `VSCE_PAT`.
