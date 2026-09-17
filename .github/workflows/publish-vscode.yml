@@ -20,6 +20,8 @@ jobs:
     defaults:
       run:
         working-directory: editors/vscode
+    env:
+      VSCE_PAT: ${{ secrets.VSCE_PAT }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -36,8 +38,13 @@ jobs:
           name: buraaq-vscode
           path: editors/vscode/*.vsix
       - name: Publish to Visual Studio Marketplace
-        if: ${{ secrets.VSCE_PAT != '' }}
-        run: npx vsce publish --pat "${{ secrets.VSCE_PAT }}"
+        if: env.VSCE_PAT != ''
+        run: npx vsce publish --pat "$VSCE_PAT"
+      - name: Skip publish (no VSCE_PAT secret)
+        if: env.VSCE_PAT == ''
+        run: |
+          echo "Set repo secret VSCE_PAT (Azure DevOps PAT, Marketplace → Manage) to publish."
+          exit 1
       - name: Attach VSIX to GitHub Release
         if: github.event_name == 'release'
         env:
