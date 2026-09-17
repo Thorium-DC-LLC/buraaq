@@ -1,0 +1,8 @@
+# Placeholder — training is via `buraaq ai train`, not this binary.
+module main
+
+use std.io.{println}
+
+fn main() {
+    println("ai_train: use buraaq ai train --plan-only (see README)")
+}

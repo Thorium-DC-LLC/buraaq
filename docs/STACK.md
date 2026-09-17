@@ -1,6 +1,6 @@
-# The Buraaq stack — Keel, Stream, Hold, Grid, Ship, Land
+# The Buraaq stack — Keel, Stream, Hold, Grid, Ship, Land, Mind
 
-Buraaq 1.0. Eight names. One path from source to any host. **Lumen** is optional (native window) — not the default.
+Buraaq 1.0. Nine names. One path from source to any host. **Lumen** is optional (native window) — not the default.
 
 | Name | What it is | You type |
 |------|------------|----------|
@@ -11,6 +11,7 @@ Buraaq 1.0. Eight names. One path from source to any host. **Lumen** is optional
 | **Ship** | Hashed native bundle (`.bur`). Not a VM. | `buraaq pack` / `buraaq ship` |
 | **Dock** | Tiny host agent that receives ships and runs them. | `buraaq dock` |
 | **Land** | Same install on AWS, Azure, GCP, Hetzner, or bare metal. | `buraaq land` / `buraaq up` |
+| **Mind** | Local models, planning, OpenAI-compatible serve. | `buraaq ai` / `std.ai` |
 | **Lumen** | Optional native HD UI. | `app`, `heading`, `show` |
 
 Complexity stays in the compiler and runtime. Application source stays three lines:
@@ -49,8 +50,8 @@ buraaq ship HOST
 
 `--cloud` is `aws`, `azure`, `gcp`, `hetzner`, or `bare`. It only changes the firewall reminder. Land writes `target/land/land.sh` and a systemd unit. Pack the `.bur` **on the same OS as the host** (a Windows ship will not run on Linux).
 
-Contract for Keel: [SERVICE.md](SERVICE.md). Lumen: [LUMEN.md](LUMEN.md). Ship/Dock: [SHIP.md](SHIP.md). Walkthrough: [CRUD_API.md](CRUD_API.md).
+Contract for Keel: [SERVICE.md](SERVICE.md). Lumen: [LUMEN.md](LUMEN.md). Ship/Dock: [SHIP.md](SHIP.md). Mind: [AI.md](AI.md). Walkthrough: [CRUD_API.md](CRUD_API.md).
 
 ## What this is not
 
-Land does not provision VMs, databases, or TLS certificates at the edge. Dock is a process + directory + token, not kernel isolation. Treat that honestly when you share a host.
+Land does not provision VMs, databases, or TLS certificates at the edge. Dock is a process + directory + token, not kernel isolation. Mind runs inference backends as peer processes (or a remote URL) — not a claimed VM boundary. Treat that honestly when you share a host.

@@ -1,0 +1,2 @@
+{"messages":[{"role":"system","content":"You are a concise Buraaq tutor."},{"role":"user","content":"What is ownership?"},{"role":"assistant","content":"One owner; the compiler tracks moves."}]}
+{"messages":[{"role":"user","content":"What is Mind?"},{"role":"assistant","content":"Buraaq AI: local models with complexity in the toolchain."}]}

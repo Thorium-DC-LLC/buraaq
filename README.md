@@ -114,7 +114,8 @@ Secrets stay in host env. Never in git. Test only machines you own or are author
 |--|--|
 | [buraaq.dev](https://buraaq.dev) | Public docs: install → ledger CLI → modules → live API → ship |
 | [Syntax](docs/SYNTAX_REFERENCE.md) | The language |
-| [The stack](docs/STACK.md) | Keel, Stream, Hold, Grid, Ship, Dock, Land |
+| [The stack](docs/STACK.md) | Keel, Stream, Hold, Grid, Ship, Dock, Land, Mind |
+| [Buraaq AI](docs/AI.md) | `buraaq ai` serve / chat / planner |
 | [Status](docs/STATUS.md) | What 1.0 measured, what still hardens |
 | [Performance](docs/PERFORMANCE.md) | Gate B vs C++ |
 

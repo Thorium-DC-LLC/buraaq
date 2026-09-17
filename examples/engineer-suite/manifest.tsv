@@ -29,3 +29,5 @@ exp_async	experimental/async_task.bq	single	compile		experimental
 exp_parallel	experimental/parallel_for.bq	single	compile		experimental
 exp_channel	experimental/channel.bq	single	compile		experimental
 pico_blink	projects/pico_blink	project	run	LED on	pico / host HAL
+ai_chat	projects/ai_chat	project	compile		std.ai (needs serve to run)
+ai_train	projects/ai_train	project	run	ai_train: use buraaq ai train	Mind train sample

@@ -328,6 +328,28 @@ Feature-gated async tasks (`buraaq.pkg` feature `async`).
 | `sha256(data: text) -> text` | SHA-256 hex digest |
 | `sha256_bytes(data: bytes) -> text` | Hash byte buffer |
 
+### `std.ai`
+
+Mind — chat against a local (or remote) OpenAI-compatible serve. See [AI.md](AI.md).
+
+| API | Description |
+|-----|-------------|
+| `model(name: text) -> int` | Opaque handle for a model id |
+| `system(handle: int, prompt: text)` | Optional system message |
+| `chat(handle: int, prompt: text) -> text` | Chat completion |
+| `embed(handle: int, text: text) -> text` | Embeddings JSON (Phase 1 may be empty) |
+
+```buraaq
+use std.ai
+
+fn main() {
+    m = ai.model("Qwen/Qwen3-8B")
+    println(ai.chat(m, "Explain Buraaq ownership"))
+}
+```
+
+Requires `buraaq ai serve MODEL` (or `BURAAQ_AI_BASE_URL`).
+
 ## C runtime (`runtime/buraaq_std.c`)
 
 Native implementations linked automatically by `buraaq build`. No garbage collection.

@@ -20,6 +20,7 @@ use buraaq_pkg::{
 
 mod flash;
 mod repl;
+mod ai;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -79,6 +80,7 @@ fn main() {
         "format" | "fmt" => cmd_format(&args[2..]),
         "check" => cmd_check(&args[2..]),
         "doctor" => cmd_doctor(),
+        "ai" => ai::cmd_ai(&args[2..]),
         "flash" => cmd_flash(&args[2..]),
         "doc" => cmd_doc(&args[2..]),
         "lsp-server" | "lsp" => cmd_lsp_server(),
@@ -112,6 +114,7 @@ fn print_usage() {
     eprintln!("  buraaq script path.bq    Run a .bq file as a script");
     eprintln!("  buraaq --version         Version, host, scripting");
     eprintln!("  buraaq doctor            Check install (clang, sysroot, script)");
+    eprintln!("  buraaq ai …              Mind: models, serve, chat (see: buraaq ai help)");
     eprintln!();
     eprintln!("Project commands (run from project root or pass -C path):");
     eprintln!("  buraaq new NAME          Create a Keel API (page + api + run)");
@@ -128,6 +131,7 @@ fn print_usage() {
     eprintln!("  buraaq ship [HOST]       Pack and run locally, or push to a Dock");
     eprintln!("  buraaq ship HOST --bundle FILE.bur  Push an already-packed ship (Linux .bur from Windows)");
     eprintln!("  buraaq land [user@HOST]  Put Dock on a cloud VM or bare metal");
+    eprintln!("  buraaq land --ai         GPU/AI host checklist (no driver installs)");
     eprintln!("  buraaq test              Run `test \"…\" {{ expect … }}` blocks");
     eprintln!("  buraaq bench             List/run benchmarks in benches/");
     eprintln!("  buraaq add NAME [VER]    Add dependency + update buraaq.lock");
@@ -1154,9 +1158,13 @@ fn dock_is_up(host: &str) -> bool {
 fn cmd_land(args: &[String]) -> CmdResult {
     let mut cloud = buraaq_ship::Cloud::Bare;
     let mut spec: Option<String> = None;
+    let mut ai = false;
     let mut i = 0;
     while i < args.len() {
         match args[i].as_str() {
+            "--ai" => {
+                ai = true;
+            }
             "--cloud" => {
                 i += 1;
                 let raw = args.get(i).ok_or_else(|| {
@@ -1183,6 +1191,11 @@ fn cmd_land(args: &[String]) -> CmdResult {
         i += 1;
     }
 
+    if ai {
+        buraaq_ai::print_land_ai_plan(spec.as_deref());
+        println!();
+    }
+
     let dir = match Project::discover_or_current() {
         Ok(p) => p.root.join("target").join("land"),
         Err(_) => PathBuf::from("target").join("land"),
@@ -1191,6 +1204,12 @@ fn cmd_land(args: &[String]) -> CmdResult {
         eprintln!("error: {e}");
         1
     })?;
+    if ai {
+        if let Err(e) = buraaq_ai::write_land_ai_kit(&kit) {
+            eprintln!("error: {e}");
+            return Err(1);
+        }
+    }
     println!("Land kit → {}", kit.display());
     println!("{}", cloud.firewall());
     if let Some(s) = spec {
@@ -1200,6 +1219,9 @@ fn cmd_land(args: &[String]) -> CmdResult {
                 println!("Dock install attempted. Copy the host token, then:");
                 let host = s.rsplit_once('@').map(|(_, h)| h).unwrap_or(&s);
                 println!("  buraaq ship {host}");
+                if ai {
+                    println!("  On the host: buraaq ai doctor && buraaq ai serve MODEL");
+                }
                 Ok(())
             }
             Err(e) => {
@@ -1214,6 +1236,9 @@ fn cmd_land(args: &[String]) -> CmdResult {
     } else {
         println!("Next: copy land.sh to the VM, or:");
         println!("  buraaq land user@HOST --cloud hetzner");
+        if ai {
+            println!("  buraaq land user@HOST --ai     # print GPU/AI checklist first");
+        }
         println!("Pack the .bur on the same OS as the host, then: buraaq ship HOST");
         Ok(())
     }

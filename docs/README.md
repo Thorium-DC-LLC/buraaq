@@ -8,7 +8,8 @@ Read in this order. Skip what you do not need.
 2. [Syntax](SYNTAX_REFERENCE.md)
 3. [The Book](BURAAQ_BOOK.md)
 4. [Standard library](STDLIB.md) — including **Stream**, **Hold**, **Grid**
-5. [The stack](STACK.md) — Keel, Ship, Dock, Land
+5. [The stack](STACK.md) — Keel, Ship, Dock, Land, Mind
+6. [Buraaq AI](AI.md) — `buraaq ai`, planner, OpenAI-compatible serve
 
 ## Ship an API
 

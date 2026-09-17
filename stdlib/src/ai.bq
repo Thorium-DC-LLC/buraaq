@@ -1,0 +1,33 @@
+# std.ai — Mind: chat and embed via local Buraaq AI serve
+#
+# Start a server:  buraaq ai serve MODEL
+# Then:
+#   m = ai.model("Qwen/Qwen3-8B")
+#   println(ai.chat(m, "Explain ownership"))
+#
+# Talks HTTP to BURAAQ_AI_BASE_URL (default http://127.0.0.1:8000).
+# Method sugar (m.chat) comes when stable; free functions are the Phase 1 API.
+module std.ai
+
+extern c {
+    fn buraaq_ai_model(name: c.text) -> c.int
+    fn buraaq_ai_chat(handle: c.int, prompt: c.text) -> c.text
+    fn buraaq_ai_embed(handle: c.int, text: c.text) -> c.text
+    fn buraaq_ai_system(handle: c.int, prompt: c.text) -> c.int
+}
+
+pub fn model(name: text) -> int {
+    unsafe { buraaq_ai_model(name.to_c()) }
+}
+
+pub fn chat(handle: int, prompt: text) -> text {
+    unsafe { buraaq_ai_chat(handle, prompt.to_c()) }
+}
+
+pub fn embed(handle: int, text: text) -> text {
+    unsafe { buraaq_ai_embed(handle, text.to_c()) }
+}
+
+pub fn system(handle: int, prompt: text) {
+    unsafe { buraaq_ai_system(handle, prompt.to_c()) }
+}

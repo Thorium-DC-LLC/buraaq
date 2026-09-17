@@ -27,7 +27,7 @@ chmod +x run.sh && ./run.sh
 | Path | Purpose |
 |------|---------|
 | `single/` | One-file programs — `buraaq run single/NN_name.bq` |
-| `projects/` | Multi-module + stdlib integration (fs, json, crypto, math, **pico_blink**) |
+| `projects/` | Multi-module + stdlib integration (fs, json, crypto, math, **pico_blink**, **ai_chat**, **ai_train**) |
 | `experimental/` | Future syntax — compile-only probes (async, channels, parallel for) |
 | `manifest.tsv` | Machine-readable list: path, mode, expected substring |
 

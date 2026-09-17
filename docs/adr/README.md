@@ -17,6 +17,8 @@ Buraaq major design decisions are documented as ADRs following the [Michael Nyga
 | [0009](./0009-concurrency-model.md) | Threads + Send/Sync Inference | Accepted |
 | [0010](./0010-deterministic-destruction.md) | Deterministic Destruction via Drop Protocol | Accepted |
 | [0011](./0011-brace-block-syntax.md) | Brace-Delimited Blocks (supersedes 0001) | Accepted |
+| [0012](./0012-unified-concurrency.md) | Unified Concurrency | Accepted |
+| [0013](./0013-buraaq-ai-runtime.md) | Buraaq AI runtime (Mind) | Accepted |
 
 ## Creating a New ADR
 

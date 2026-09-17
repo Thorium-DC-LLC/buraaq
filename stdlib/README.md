@@ -29,6 +29,7 @@ The first Buraaq standard library — small surface area, **one obvious way** fo
 | `src/os.bq` | `std.os` | Environment, argv |
 | `src/crypto.bq` | `std.crypto` | SHA-256 |
 | `src/led.bq` | `std.led` | Board / host LED (`on` / `off` / `wait` / `blink`) |
+| `src/ai.bq` | `std.ai` | Mind: `model` / `chat` / `embed` via AI serve |
 | `runtime/buraaq_std.c` | — | Native runtime (no GC) |
 | `runtime/buraaq_board.c` | — | Host stub for `std.led` |
 

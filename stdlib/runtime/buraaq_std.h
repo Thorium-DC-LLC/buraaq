@@ -126,6 +126,12 @@ char *buraaq_json_parse_string_field(const char *json, const char *key);
 /* --- http client --- */
 char *buraaq_http_get_body(const char *url);
 
+/* --- AI client (OpenAI-compatible local serve) --- */
+int32_t buraaq_ai_model(const char *name);
+char *buraaq_ai_chat(int32_t handle, const char *prompt);
+char *buraaq_ai_embed(int32_t handle, const char *text);
+int32_t buraaq_ai_system(int32_t handle, const char *prompt);
+
 /* --- http/https server --- */
 int32_t buraaq_http_listen(int32_t port, int32_t https);
 int32_t buraaq_http_accept(int32_t listener);

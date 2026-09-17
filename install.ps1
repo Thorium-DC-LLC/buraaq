@@ -24,8 +24,38 @@ if (-not $src) {
 
 Write-Host "Using packaged compiler $src (Rust is not required)"
 $dst = Join-Path $Prefix "buraaq.exe"
-Copy-Item -Force $src $dst
-Write-Host "Installed $dst"
+$sidecar = Join-Path $Prefix "buraaq1.exe"
+# Always refresh sidecar first (PowerShell prefers .exe over .cmd; LSP often locks buraaq.exe).
+Copy-Item -Force $src $sidecar
+$copied = $false
+try {
+    Copy-Item -Force $src $dst -ErrorAction Stop
+    $copied = $true
+} catch {
+    $old = Join-Path $Prefix "buraaq.exe.old"
+    Remove-Item -Force $old -ErrorAction SilentlyContinue
+    Move-Item -Force $dst $old -ErrorAction SilentlyContinue
+    try {
+        Copy-Item -Force $src $dst -ErrorAction Stop
+        $copied = $true
+        Write-Host "Replaced locked buraaq.exe (previous saved as buraaq.exe.old)."
+    } catch {
+        Write-Host "Note: buraaq.exe still locked; buraaq.cmd -> buraaq1.exe has the new build."
+    }
+}
+if ($copied) {
+    Write-Host "Installed $dst"
+}
+@"
+@echo off
+setlocal
+if exist "%~dp0buraaq1.exe" (
+  "%~dp0buraaq1.exe" %*
+) else (
+  "%~dp0buraaq.exe" %*
+)
+"@ | Set-Content -Encoding ASCII (Join-Path $Prefix "buraaq.cmd")
+Write-Host "Also installed buraaq.cmd / buraaq1.exe shim."
 
 # discover_sysroot looks next to the exe: <prefix>/sysroot/src/io.bq
 $sys = Join-Path $Prefix "sysroot"
@@ -52,20 +82,6 @@ if (Test-Path $ensure) {
     & $ensure
 }
 
-# Sidecar + .cmd so PATH keeps working when an editor holds buraaq.exe open (LSP).
-$sidecar = Join-Path $Prefix "buraaq1.exe"
-Copy-Item -Force $dst $sidecar
-@"
-@echo off
-setlocal
-if exist "%~dp0buraaq1.exe" (
-  "%~dp0buraaq1.exe" %*
-) else (
-  "%~dp0buraaq.exe" %*
-)
-"@ | Set-Content -Encoding ASCII (Join-Path $Prefix "buraaq.cmd")
-Write-Host "Also installed buraaq.cmd shim (avoids LSP file lock on buraaq.exe)."
-
 # Ensure User PATH contains the install prefix (Machine PATH is easy to miss in new shells).
 $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
 $parts = @()
@@ -84,6 +100,6 @@ $env:Path = [Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [En
 Write-Host ""
 Write-Host "Open a new terminal, then:"
 Write-Host "  buraaq --version"
+Write-Host "  buraaq ai doctor"
 Write-Host "  buraaq            # interactive shell"
-Write-Host "  buraaq doctor"
 Write-Host "Rust was not required."
