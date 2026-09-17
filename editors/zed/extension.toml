@@ -2,7 +2,7 @@
   "name": "buraaq",
   "version": "1.0.0",
   "description": "Buraaq language support (.bq) with LSP",
-  "authors": ["Thorium DC, LLC <https://buraaq.dev>"],
+  "authors": ["Thorium DC <https://buraaq.dev>"],
   "schema_version": 1,
   "languages": {
     "Buraaq": {

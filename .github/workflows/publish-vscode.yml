@@ -3,7 +3,7 @@
 #   Organization: All accessible organizations
 #   Scopes: Marketplace → Manage
 # Create publisher once: https://marketplace.visualstudio.com/manage
-#   Publisher ID must match package.json "publisher" (ThoriumDCLLC)
+#   Publisher ID must match package.json "publisher" (ThoriumDC)
 #
 # Repo secret: VSCE_PAT
 

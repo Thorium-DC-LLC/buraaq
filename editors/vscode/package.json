@@ -3,7 +3,7 @@
   "displayName": "Buraaq",
   "description": "Buraaq language — Write like Python. Run like C. Syntax, LSP, snippets.",
   "version": "1.0.0",
-  "publisher": "ThoriumDCLLC",
+  "publisher": "ThoriumDC",
   "license": "MIT",
   "icon": "media/icon.png",
   "galleryBanner": {
@@ -12,11 +12,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Thorium-DC-LLC/buraaq.git"
+    "url": "https://github.com/Thorium-DC/buraaq.git"
   },
   "homepage": "https://buraaq.dev",
   "bugs": {
-    "url": "https://github.com/Thorium-DC-LLC/buraaq/issues"
+    "url": "https://github.com/Thorium-DC/buraaq/issues"
   },
   "qna": "marketplace",
   "engines": {

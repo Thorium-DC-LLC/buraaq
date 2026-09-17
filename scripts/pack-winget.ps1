@@ -57,8 +57,8 @@ $notes = Join-Path $Root "dist\winget-$Version.sha256.txt"
 @"
 File: $Name.zip
 SHA256: $hash
-Upload to: https://github.com/Thorium-DC-LLC/buraaq/releases/download/v$Version/$Name.zip
-Then set InstallerSha256 in packaging/winget/$Version/ThoriumDCLLC.Buraaq.installer.yaml
+Upload to: https://github.com/Thorium-DC/buraaq/releases/download/v$Version/$Name.zip
+Then set InstallerSha256 in packaging/winget/$Version/ThoriumDC.Buraaq.installer.yaml
 Submit PR to https://github.com/microsoft/winget-pkgs
 "@ | Set-Content -Path $notes -Encoding utf8
 
@@ -66,11 +66,11 @@ Write-Host "Packed $Zip"
 Write-Host "SHA256 $hash"
 Write-Host "Notes  $notes"
 
-$installerYaml = Join-Path $Root "packaging\winget\$Version\ThoriumDCLLC.Buraaq.installer.yaml"
+$installerYaml = Join-Path $Root "packaging\winget\$Version\ThoriumDC.Buraaq.installer.yaml"
 if (Test-Path $installerYaml) {
     $y = Get-Content $installerYaml -Raw
     $y = $y -replace 'InstallerSha256:\s*\S+', "InstallerSha256: $hash"
-    $y = $y -replace 'InstallerUrl:\s*\S+', "InstallerUrl: https://github.com/Thorium-DC-LLC/buraaq/releases/download/v$Version/$Name.zip"
+    $y = $y -replace 'InstallerUrl:\s*\S+', "InstallerUrl: https://github.com/Thorium-DC/buraaq/releases/download/v$Version/$Name.zip"
     Set-Content -Path $installerYaml -Value $y.TrimEnd() -Encoding utf8
     Write-Host "Updated $installerYaml"
 }

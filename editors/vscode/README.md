@@ -15,13 +15,13 @@ Language support for `.bq` files via **`buraaq lsp-server`**.
 Marketplace (after publish): search **Buraaq** or:
 
 ```text
-ext install ThoriumDCLLC.buraaq
+ext install ThoriumDC.buraaq
 ```
 
 From the GitHub Release VSIX:
 
 ```powershell
-code --install-extension https://github.com/Thorium-DC-LLC/buraaq/releases/latest/download/buraaq-1.0.0.vsix
+code --install-extension https://github.com/Thorium-DC/buraaq/releases/latest/download/buraaq-1.0.0.vsix
 ```
 
 Publish steps: [PUBLISH.md](PUBLISH.md).
@@ -32,4 +32,4 @@ Publish steps: [PUBLISH.md](PUBLISH.md).
 | `buraaq.lsp.path` | `buraaq` | Path to the Buraaq CLI |
 | `buraaq.lsp.trace` | `off` | `off` / `messages` / `verbose` |
 
-Publisher id for Marketplace: `ThoriumDCLLC` (publish with `vsce` when ready).
+Publisher id for Marketplace: `ThoriumDC` (publish with `vsce` when ready).

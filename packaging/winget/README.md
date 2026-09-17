@@ -14,7 +14,7 @@ Moniker `buraaq` makes the short install name work after Microsoft merges the ma
    (asset name must match `InstallerUrl` in the installer YAML).
 
 3. Copy SHA256 from `dist\winget-1.0.0.sha256.txt` into
-   `1.0.0/ThoriumDCLLC.Buraaq.installer.yaml` → `InstallerSha256`.
+   `1.0.0/ThoriumDC.Buraaq.installer.yaml` → `InstallerSha256`.
 
 4. Validate:
 
@@ -27,7 +27,7 @@ Moniker `buraaq` makes the short install name work after Microsoft merges the ma
 5. Fork [microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs), copy
    `packaging/winget/1.0.0/*` to:
 
-   `manifests/t/ThoriumDCLLC/Buraaq/1.0.0/`
+   `manifests/t/ThoriumDC/Buraaq/1.0.0/`
 
 6. Open a PR. After merge (often 1–3 days), anyone can run:
 
@@ -41,6 +41,6 @@ LLVM is declared as a dependency (`LLVM.LLVM`). Users who already have clang on 
 
 | Field | Value |
 |-------|--------|
-| PackageIdentifier | `ThoriumDCLLC.Buraaq` |
+| PackageIdentifier | `ThoriumDC.Buraaq` |
 | PackageName | `Buraaq` |
 | Moniker | `buraaq` → `winget install buraaq` |
