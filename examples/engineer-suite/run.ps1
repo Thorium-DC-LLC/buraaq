@@ -32,6 +32,16 @@ foreach ($line in $rows) {
                 }
                 Write-Host "PASS run" -ForegroundColor Green
                 $pass++
+            } elseif ($mode -eq "script") {
+                $localBq = Join-Path $Root "..\..\compiler\target\release\buraaq.exe"
+                $bq = if (Test-Path $localBq) { $localBq } else { "buraaq" }
+                $out = & $bq script $path 2>&1 | Out-String
+                if ($LASTEXITCODE -ne 0) { throw "script failed: $out" }
+                if ($expect -and $out -notmatch [regex]::Escape($expect)) {
+                    throw "stdout missing '$expect': $out"
+                }
+                Write-Host "PASS script" -ForegroundColor Green
+                $pass++
             } elseif ($mode -eq "compile" -or $mode -eq "check") {
                 try {
                     $out = & buraaq build $path 2>&1 | Out-String

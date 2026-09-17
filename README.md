@@ -5,7 +5,7 @@
 
 **Write like Python. Run like C.**
 
-A self-hosted systems language from **Thorium DC**. You write `.bq`. LLVM emits a native binary. There is no garbage collector, no interpreter, and no Docker image on the default path. Unique `std.*` names import themselves. Rust is not required to install.
+A self-hosted systems language from **Thorium DC**. You write `.bq`. LLVM emits a native binary. There is no garbage collector, and the default path is AOT (no Docker required). Optional `buraaq script` interprets MIR for a fast edit loop — same language, not a second dialect. Unique `std.*` names import themselves. Rust is not required to install.
 
 ```buraaq
 fn main() {

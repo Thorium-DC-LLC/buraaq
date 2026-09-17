@@ -27,9 +27,11 @@ chmod +x run.sh && ./run.sh
 | Path | Purpose |
 |------|---------|
 | `single/` | One-file programs — `buraaq run single/NN_name.bq` |
-| `projects/` | Multi-module + stdlib integration (fs, json, crypto, math) |
+| `projects/` | Multi-module + stdlib integration (fs, json, crypto, math, **pico_blink**) |
 | `experimental/` | Future syntax — compile-only probes (async, channels, parallel for) |
 | `manifest.tsv` | Machine-readable list: path, mode, expected substring |
+
+Pico W LED blink: `projects/pico_blink` — `buraaq run` on the host, or `.\flash.ps1` for the onboard LED (BOOTSEL).
 
 ## Categories covered
 

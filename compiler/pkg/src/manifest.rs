@@ -42,6 +42,9 @@ pub struct PackageMeta {
     pub license: Option<String>,
     #[serde(default)]
     pub description: Option<String>,
+    /// Target board for `buraaq flash` (e.g. `pico_w`).
+    #[serde(default)]
+    pub board: Option<String>,
     #[serde(default)]
     pub r#type: PackageType,
 }
@@ -103,6 +106,7 @@ impl Manifest {
                 authors: vec![],
                 license: Some("MIT".into()),
                 description: None,
+                board: None,
                 r#type: PackageType::Bin,
             },
             dependencies: BTreeMap::new(),

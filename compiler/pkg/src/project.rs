@@ -81,11 +81,13 @@ pub fn find_root(start: &Path) -> Option<PathBuf> {
 }
 
 /// What `buraaq new` scaffolds. Keel is the default (API + page + run).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum NewKind {
     Keel,
     Cli,
     Lumen,
+    /// Electronics board (e.g. Raspberry Pi Pico W).
+    Board { board: String },
 }
 
 pub fn create_new(name: &str, parent: &Path) -> Result<Project, ProjectError> {
@@ -102,8 +104,18 @@ pub fn create_new_kind(
     std::fs::create_dir_all(root.join("tests"))?;
     std::fs::create_dir_all(root.join("benches"))?;
 
-    let manifest = Manifest::default_app(name);
+    let mut manifest = Manifest::default_app(name);
+    if let NewKind::Board { board } = &kind {
+        manifest.package.board = Some(board.clone());
+        manifest.package.description = Some(format!("Buraaq firmware for {board}"));
+    }
     manifest.save(&root.join(MANIFEST))?;
+
+    let run_hint = match &kind {
+        NewKind::Keel => "buraaq up",
+        NewKind::Cli | NewKind::Lumen => "buraaq run",
+        NewKind::Board { .. } => "buraaq run\nburaaq flash",
+    };
 
     match kind {
         NewKind::Keel => {
@@ -162,6 +174,29 @@ fn main() {{
                 ),
             )?;
         }
+        NewKind::Board { board } => {
+            std::fs::write(
+                root.join("src").join("main.bq"),
+                format!(
+                    r#"# {name} — {board} LED blink
+# Host:  buraaq run
+# Board: buraaq flash   (BOOTSEL USB)
+module main
+
+use std.led.{{on, off, wait}}
+
+fn main() {{
+    while true {{
+        on()
+        wait(200)
+        off()
+        wait(200)
+    }}
+}}
+"#
+                ),
+            )?;
+        }
     }
 
     let test_src = r##"test "smoke" {
@@ -171,11 +206,6 @@ fn main() {{
 "##;
     std::fs::write(root.join("tests").join("smoke.bq"), test_src)?;
 
-    let run_hint = match kind {
-        NewKind::Keel => "buraaq up",
-        NewKind::Cli => "buraaq run",
-        NewKind::Lumen => "buraaq run",
-    };
     let readme = format!(
         "# {name}\n\nBuraaq application.\n\n```bash\n{run_hint}\nburaaq test\n```\n"
     );

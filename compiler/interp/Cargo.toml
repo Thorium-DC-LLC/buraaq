@@ -1,0 +1,15 @@
+[package]
+name = "buraaq_interp"
+description = "Optional MIR interpreter for buraaq script (not the core AOT model)"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+buraaq_mir = { path = "../mir" }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+buraaq_diagnostics = { path = "../diagnostics" }
+buraaq_frontend = { path = "../frontend" }
+buraaq_parser = { path = "../parser" }
+buraaq_source = { path = "../source" }

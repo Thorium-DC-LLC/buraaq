@@ -85,6 +85,7 @@ dependencies = [
  "buraaq_driver",
  "buraaq_fmt",
  "buraaq_frontend",
+ "buraaq_interp",
  "buraaq_lsp",
  "buraaq_pkg",
  "buraaq_ship",
@@ -182,6 +183,18 @@ dependencies = [
  "buraaq_pkg",
  "buraaq_semantic",
  "buraaq_source",
+]
+
+[[package]]
+name = "buraaq_interp"
+version = "1.0.0"
+dependencies = [
+ "buraaq_diagnostics",
+ "buraaq_frontend",
+ "buraaq_mir",
+ "buraaq_parser",
+ "buraaq_source",
+ "thiserror",
 ]
 
 [[package]]

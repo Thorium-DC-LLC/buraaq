@@ -1,0 +1,14 @@
+#!/usr/bin/env -S buraaq script
+# Scripting mode: same language, no clang link.
+# Prefer `buraaq run` when you want a native binary.
+
+fn main() {
+    println("hello from buraaq script")
+    mut n = 0
+    mut sum = 0
+    while n < 5 {
+        sum = sum + n
+        n = n + 1
+    }
+    print_int(sum)
+}

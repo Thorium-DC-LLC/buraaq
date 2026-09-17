@@ -23,7 +23,9 @@ multi_module	projects/multi_module	project	run	20	modules
 fs_read	projects/fs_read	project	run	engineer-suite-fs-ok	filesystem
 json_crypto	projects/json_crypto	project	run	bccc1e6e9451e5f6f3d9d1fc308d3351de6afc1e2a911afd1a7bc801d7bc7649	json+sha256
 math_time_os	projects/math_time_os	project	run	7	stdlib math
+21_script_hello	single/21_script_hello.bq	single	script	10	scripting MIR
 exp_struct_fn	experimental/struct_fn.bq	single	compile		experimental
 exp_async	experimental/async_task.bq	single	compile		experimental
 exp_parallel	experimental/parallel_for.bq	single	compile		experimental
 exp_channel	experimental/channel.bq	single	compile		experimental
+pico_blink	projects/pico_blink	project	run	LED on	pico / host HAL

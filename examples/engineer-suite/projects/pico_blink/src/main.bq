@@ -1,0 +1,18 @@
+# Pico W activity LED — Buraaq only.
+#
+#   buraaq run     # host: prints LED on/off
+#   buraaq flash   # BOOTSEL: real LED
+module main
+
+use std.led.{on, off, wait}
+
+fn main() {
+    mut n = 0
+    while n < 3 {
+        on()
+        wait(200)
+        off()
+        wait(200)
+        n = n + 1
+    }
+}

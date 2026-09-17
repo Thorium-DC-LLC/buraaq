@@ -1,0 +1,8 @@
+[package]
+name = "pico_blink"
+version = "0.1.0"
+entry = "main"
+type = "bin"
+board = "pico_w"
+
+[dependencies]

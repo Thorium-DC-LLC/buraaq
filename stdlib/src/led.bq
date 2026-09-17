@@ -1,0 +1,49 @@
+# std.led — onboard / activity LED (boards + host stub)
+#
+# Complexity stays in the runtime. You write:
+#
+#   use std.led.{on, off, wait, blink}
+#   on()
+#   wait(200)
+#   off()
+#
+module std.led
+
+extern c {
+    fn buraaq_led_on() -> void
+    fn buraaq_led_off() -> void
+    fn buraaq_led_toggle() -> void
+    fn buraaq_led_wait_ms(ms: c.int) -> void
+}
+
+pub fn on() {
+    unsafe {
+        buraaq_led_on()
+    }
+}
+
+pub fn off() {
+    unsafe {
+        buraaq_led_off()
+    }
+}
+
+pub fn toggle() {
+    unsafe {
+        buraaq_led_toggle()
+    }
+}
+
+pub fn wait(ms: int) {
+    unsafe {
+        buraaq_led_wait_ms(ms)
+    }
+}
+
+# One on/off cycle. Repeat in a loop to blink forever.
+pub fn blink(ms: int) {
+    on()
+    wait(ms)
+    off()
+    wait(ms)
+}

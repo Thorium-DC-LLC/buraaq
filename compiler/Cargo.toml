@@ -13,6 +13,7 @@ members = [
     "semantic",
     "frontend",
     "mir",
+    "interp",
     "codegen",
     "driver",
     "pkg",

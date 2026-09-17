@@ -28,7 +28,9 @@ The first Buraaq standard library — small surface area, **one obvious way** fo
 | `src/async.bq` | `std.async` | Async tasks |
 | `src/os.bq` | `std.os` | Environment, argv |
 | `src/crypto.bq` | `std.crypto` | SHA-256 |
+| `src/led.bq` | `std.led` | Board / host LED (`on` / `off` / `wait` / `blink`) |
 | `runtime/buraaq_std.c` | — | Native runtime (no GC) |
+| `runtime/buraaq_board.c` | — | Host stub for `std.led` |
 
 ## Tests & benchmarks
 

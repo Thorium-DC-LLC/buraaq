@@ -13,6 +13,7 @@ buraaq_codegen = { path = "../codegen" }
 buraaq_diagnostics = { path = "../diagnostics" }
 buraaq_doc = { path = "../doc" }
 buraaq_driver = { path = "../driver" }
+buraaq_interp = { path = "../interp" }
 buraaq_fmt = { path = "../fmt" }
 buraaq_frontend = { path = "../frontend" }
 buraaq_pkg = { path = "../pkg" }

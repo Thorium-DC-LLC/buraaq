@@ -8,8 +8,9 @@ use buraaq_diagnostics::{DiagnosticHandler, StandardHandler};
 use buraaq_doc::{default_doc_dir, generate_project, write_html};
 use buraaq_codegen::OptLevel;
 use buraaq_driver::{
-    compile_project, compile_to_executable, compile_to_ir, BuildOptions, DriverError,
+    compile_project, compile_to_executable, compile_to_ir, compile_to_mir, BuildOptions, DriverError,
 };
+use buraaq_interp::interpret_module;
 use buraaq_fmt::{FormatOptions, format_tree};
 use buraaq_frontend::{analyze_project, Frontend};
 use buraaq_pkg::{
@@ -17,11 +18,17 @@ use buraaq_pkg::{
     remove_dependency, run_tests, BuildCache, NewKind, Project, Resolver,
 };
 
+mod flash;
+mod repl;
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() < 2 {
-        print_usage();
-        process::exit(1);
+        // Bare `buraaq` → interactive script shell
+        if let Err(code) = repl::run_repl() {
+            process::exit(code);
+        }
+        return;
     }
 
     if matches!(args[1].as_str(), "--version" | "-V" | "version") {
@@ -38,6 +45,19 @@ fn main() {
         }
         return;
     }
+    // One-liner: buraaq -e 'println("hi")'  or  buraaq --eval '...'
+    if matches!(args[1].as_str(), "-e" | "--eval") {
+        let code = args.get(2).map(|s| s.as_str()).unwrap_or("");
+        if code.is_empty() {
+            eprintln!("error: buraaq -e 'code'");
+            process::exit(1);
+        }
+        if let Err(e) = repl::eval_snippet(code) {
+            eprintln!("error: {e}");
+            process::exit(1);
+        }
+        return;
+    }
 
     let result = match args[1].as_str() {
         "new" => cmd_new(&args[2..]),
@@ -50,6 +70,8 @@ fn main() {
         "land" => cmd_land(&args[2..]),
         "build" => cmd_build(&args[2..]),
         "run" => cmd_run(&args[2..]),
+        "script" => cmd_script(&args[2..]),
+        "repl" | "shell" => repl::run_repl(),
         "test" => cmd_test(&args[2..]),
         "bench" => cmd_bench(&args[2..]),
         "add" => cmd_add(&args[2..]),
@@ -57,6 +79,7 @@ fn main() {
         "format" | "fmt" => cmd_format(&args[2..]),
         "check" => cmd_check(&args[2..]),
         "doctor" => cmd_doctor(),
+        "flash" => cmd_flash(&args[2..]),
         "doc" => cmd_doc(&args[2..]),
         "lsp-server" | "lsp" => cmd_lsp_server(),
         "emit-ir" => cmd_emit_ir(&args[2..]),
@@ -82,12 +105,22 @@ type CmdResult = Result<(), i32>;
 fn print_usage() {
     eprintln!("Buraaq v{} — one tool for the whole workflow", env!("CARGO_PKG_VERSION"));
     eprintln!();
+    eprintln!("Terminal:");
+    eprintln!("  buraaq                   Interactive script shell (REPL)");
+    eprintln!("  buraaq shell | repl      Same as bare `buraaq`");
+    eprintln!("  buraaq -e 'code'         Eval one snippet and exit");
+    eprintln!("  buraaq script path.bq    Run a .bq file as a script");
+    eprintln!("  buraaq --version         Version, host, scripting");
+    eprintln!("  buraaq doctor            Check install (clang, sysroot, script)");
+    eprintln!();
     eprintln!("Project commands (run from project root or pass -C path):");
     eprintln!("  buraaq new NAME          Create a Keel API (page + api + run)");
     eprintln!("  buraaq new NAME --ui     Create a Lumen native HD window");
     eprintln!("  buraaq new NAME --cli    Create a hello-world CLI");
+    eprintln!("  buraaq new NAME --board pico_w   LED blink for Pico W");
     eprintln!("  buraaq build [--release|--release-fast|--size] Build → target/{{debug|release}}/");
-    eprintln!("  buraaq run [--release]   Build and run");
+    eprintln!("  buraaq run [--release]   Build and run (native AOT)");
+    eprintln!("  buraaq flash [--board pico_w]  Build UF2 and copy to BOOTSEL");
     eprintln!("  buraaq up                Pack + local Dock + ship (the local happy path)");
     eprintln!("  buraaq pack              Release-build + write target/ship/<app>.bur");
     eprintln!("  buraaq launch FILE.bur   Run a packed ship locally");
@@ -101,10 +134,8 @@ fn print_usage() {
     eprintln!("  buraaq remove NAME       Remove dependency");
     eprintln!("  buraaq format            Format all .bq sources (official style)");
     eprintln!("  buraaq check             Parse + typecheck without codegen");
-    eprintln!("  buraaq doctor            Toolchain: clang, sysroot (Rust is not required to use Buraaq)");
     eprintln!("  buraaq doc               Generate HTML API docs → target/doc/");
     eprintln!("  buraaq lsp-server        Start Language Server (stdio, for editors)");
-    eprintln!("  buraaq --version         Compiler version and host triple");
     eprintln!("  buraaq --sysroot         Print stdlib location");
     eprintln!();
     eprintln!("Single-file (legacy):");
@@ -202,6 +233,7 @@ fn parse_build_flags(args: &[String]) -> (BuildOptions, Vec<String>) {
         opt,
         mir_opt,
         extra_libs,
+        extra_c: Vec::new(),
         sysroot,
         output,
         emit_ir,
@@ -214,29 +246,49 @@ fn parse_build_flags(args: &[String]) -> (BuildOptions, Vec<String>) {
 fn print_version() {
     println!("Buraaq {}", env!("CARGO_PKG_VERSION"));
     println!("host: {}", buraaq_codegen::TargetTriple::detect_host());
-    println!("backend: LLVM IR (linked with clang)");
+    println!("backend: LLVM IR (linked with clang) — `buraaq run`");
+    println!("scripting: MIR interpreter — `buraaq` / `buraaq repl` / `buraaq script`");
     if let Some(root) = discover_sysroot(None) {
         println!("sysroot: {}", root.display());
+    } else {
+        println!("sysroot: MISSING");
+    }
+    if let Ok(exe) = env::current_exe() {
+        println!("exe: {}", exe.display());
     }
 }
 
 fn cmd_doctor() -> CmdResult {
+    let mut ok = true;
     println!("Buraaq {}", env!("CARGO_PKG_VERSION"));
     println!("host: {}", buraaq_codegen::TargetTriple::detect_host());
+    if let Ok(exe) = env::current_exe() {
+        println!("installed: {}", exe.display());
+    } else {
+        println!("installed: (unknown path)");
+    }
     match discover_sysroot(None) {
         Some(p) => println!("sysroot: {}", p.display()),
         None => {
             eprintln!("sysroot: MISSING (set BURAAQ_SYSROOT)");
-            return Err(1);
+            ok = false;
         }
     }
     match buraaq_codegen::clang_path() {
-        Some(p) => println!("clang: {}", p.display()),
+        Some(p) => println!("clang: {}  (needed for `buraaq run` / build)", p.display()),
         None => {
-            eprintln!("clang: MISSING");
+            eprintln!("clang: MISSING  (scripting still works; native build needs clang)");
             eprintln!("  Set BURAAQ_CLANG, or run scripts/ensure-llvm.ps1 (Windows) / scripts/ensure-llvm.sh");
             eprintln!("  Sidecar: %LOCALAPPDATA%\\buraaq\\llvm  or  ~/.local/share/buraaq/llvm");
-            return Err(1);
+            // scripting does not require clang
+        }
+    }
+    // Prove scripting path
+    match repl::eval_snippet("") {
+        Ok(()) => println!("scripting: ok  (`buraaq` REPL / `buraaq script` / `buraaq -e`)"),
+        Err(e) => {
+            eprintln!("scripting: FAIL — {e}");
+            ok = false;
         }
     }
     let cargo = Command::new("cargo").arg("-V").output().ok();
@@ -250,9 +302,14 @@ fn cmd_doctor() -> CmdResult {
         _ => println!("cargo: not on PATH (ok — Rust is not required to use Buraaq)"),
     }
     println!("install: dist/buraaq — one step, Rust is not required");
-    println!("bootstrap: M3–M11 evidenced (see docs/BOOTSTRAP.md)");
-    println!("self-host: packaged CLI; guest LLVM compiles lexer.bq, parser.bq, llvm.bq");
-    Ok(())
+    println!("try: buraaq          # REPL");
+    println!("     buraaq -e \"println(\\\"hi\\\")\"");
+    println!("     buraaq run      # native AOT");
+    if ok {
+        Ok(())
+    } else {
+        Err(1)
+    }
 }
 
 fn print_diagnostics(handler: &StandardHandler, files: &[&buraaq_source::SourceFile]) {
@@ -271,11 +328,31 @@ fn print_diagnostics(handler: &StandardHandler, files: &[&buraaq_source::SourceF
 fn cmd_new(args: &[String]) -> CmdResult {
     let mut kind = NewKind::Keel;
     let mut name: Option<String> = None;
-    for a in args {
-        match a.as_str() {
+    let mut i = 0;
+    while i < args.len() {
+        let a = args[i].as_str();
+        match a {
             "--cli" => kind = NewKind::Cli,
             "--api" | "--keel" => kind = NewKind::Keel,
             "--ui" | "--lumen" => kind = NewKind::Lumen,
+            "--board" => {
+                let board = args
+                    .get(i + 1)
+                    .map(|s| s.as_str())
+                    .filter(|s| !s.starts_with('-'))
+                    .unwrap_or("pico_w");
+                kind = NewKind::Board {
+                    board: board.to_string(),
+                };
+                if args.get(i + 1).is_some_and(|s| !s.starts_with('-')) {
+                    i += 1;
+                }
+            }
+            other if other.starts_with("--board=") => {
+                kind = NewKind::Board {
+                    board: other.trim_start_matches("--board=").to_string(),
+                };
+            }
             other if other.starts_with('-') => {
                 eprintln!("error: unknown new flag `{other}`");
                 return Err(1);
@@ -288,13 +365,14 @@ fn cmd_new(args: &[String]) -> CmdResult {
                 name = Some(other.to_string());
             }
         }
+        i += 1;
     }
     let name = name.ok_or_else(|| {
         eprintln!("error: expected project name: buraaq new myapi");
         1
     })?;
     let parent = env::current_dir().map_err(|_| 1)?;
-    let project = create_new_kind(&name, &parent, kind).map_err(|e| {
+    let project = create_new_kind(&name, &parent, kind.clone()).map_err(|e| {
         eprintln!("error: {e}");
         1
     })?;
@@ -312,8 +390,55 @@ fn cmd_new(args: &[String]) -> CmdResult {
             println!("  Point bind() at a Keel API (default http://127.0.0.1:8080)");
         }
         NewKind::Cli => println!("  buraaq run"),
+        NewKind::Board { board } => {
+            println!("  buraaq run         # try LED on this PC");
+            println!("  buraaq flash       # BOOTSEL USB → {board}");
+        }
     }
     Ok(())
+}
+
+fn cmd_flash(args: &[String]) -> CmdResult {
+    let (root, rest) = split_root_flag(args);
+    let mut board_flag: Option<String> = None;
+    let mut i = 0;
+    while i < rest.len() {
+        match rest[i].as_str() {
+            "--board" => {
+                if let Some(b) = rest.get(i + 1) {
+                    board_flag = Some(b.clone());
+                    i += 1;
+                }
+            }
+            other if other.starts_with("--board=") => {
+                board_flag = Some(other.trim_start_matches("--board=").to_string());
+            }
+            other if other.starts_with('-') => {
+                eprintln!("error: unknown flash flag `{other}`");
+                return Err(1);
+            }
+            _ => {}
+        }
+        i += 1;
+    }
+    let project = if let Some(r) = root {
+        Project::discover(&r).map_err(|e| {
+            eprintln!("error: {e}");
+            1
+        })?
+    } else {
+        Project::discover_or_current().map_err(|e| {
+            eprintln!("error: {e}");
+            1
+        })?
+    };
+    let board = board_flag
+        .or_else(|| project.manifest.package.board.clone())
+        .unwrap_or_else(|| "pico_w".into());
+    flash::flash_project(&project, &board).map_err(|e| {
+        eprintln!("error: {e}");
+        1
+    })
 }
 
 fn cmd_build(args: &[String]) -> CmdResult {
@@ -455,6 +580,84 @@ fn run_executable(exe: &Path, args: &[String]) -> CmdResult {
         Ok(())
     } else {
         Err(status.code().unwrap_or(1))
+    }
+}
+
+/// Opt-in scripting: same language, MIR interpreter, no clang link.
+/// Core product remains AOT (`buraaq run` / `buraaq build`).
+fn cmd_script(args: &[String]) -> CmdResult {
+    let mut path: Option<PathBuf> = None;
+    let mut script_args: Vec<String> = Vec::new();
+    let mut eval: Option<String> = None;
+    let mut i = 0;
+    while i < args.len() {
+        let a = &args[i];
+        if a == "-e" || a == "--eval" {
+            eval = args.get(i + 1).cloned();
+            i += 2;
+            continue;
+        }
+        if a == "--" {
+            script_args.extend(args[i + 1..].iter().cloned());
+            break;
+        }
+        if path.is_none() && !a.starts_with('-') {
+            path = Some(PathBuf::from(a));
+        } else if path.is_some() {
+            script_args.push(a.clone());
+        } else {
+            eprintln!("error: unknown script flag `{a}`");
+            return Err(1);
+        }
+        i += 1;
+    }
+    if let Some(code) = eval {
+        return repl::eval_snippet(&code).map_err(|e| {
+            eprintln!("error: {e}");
+            1
+        });
+    }
+    let path = path.ok_or_else(|| {
+        eprintln!("error: buraaq script path.bq [-- args…]");
+        eprintln!("       buraaq script -e 'println(\"hi\")'");
+        eprintln!("  Or interactive: buraaq   /   buraaq repl");
+        1
+    })?;
+    if !path.exists() {
+        eprintln!("error: file not found: {}", path.display());
+        return Err(1);
+    }
+    let _ = script_args;
+    let handler = StandardHandler::new();
+    let fe = Frontend::compile_file(&path, &handler);
+    if fe.had_errors {
+        print_diagnostics(&handler, &[&fe.source]);
+        eprintln!(
+            "error: script failed with {} error(s)",
+            handler.error_count().max(1)
+        );
+        return Err(1);
+    }
+    let opts = BuildOptions {
+        mir_opt: false,
+        ..BuildOptions::default()
+    };
+    let mir = compile_to_mir(&fe.ast, &opts).map_err(|e| {
+        eprintln!("error: {e}");
+        1
+    })?;
+    match interpret_module(&mir) {
+        Ok(code) => {
+            if code == 0 {
+                Ok(())
+            } else {
+                Err(code)
+            }
+        }
+        Err(e) => {
+            eprintln!("error: {e}");
+            Err(1)
+        }
     }
 }
 

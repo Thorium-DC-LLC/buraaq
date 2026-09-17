@@ -40,6 +40,8 @@ pub struct BuildOptions {
     pub mir_opt: bool,
     pub sysroot: Option<PathBuf>,
     pub extra_libs: Vec<String>,
+    /// Extra C sources linked with the runtime (e.g. board HALs under `native/`).
+    pub extra_c: Vec<PathBuf>,
 }
 
 impl Default for BuildOptions {
@@ -54,6 +56,7 @@ impl Default for BuildOptions {
             mir_opt: true,
             sysroot: None,
             extra_libs: Vec::new(),
+            extra_c: Vec::new(),
         }
     }
 }
@@ -66,6 +69,24 @@ pub struct CompileOutput {
     pub llvm_ir: String,
     pub executable: Option<PathBuf>,
     pub codegen_us: u128,
+}
+
+pub fn compile_to_mir(
+    program: &Program,
+    opts: &BuildOptions,
+) -> Result<buraaq_mir::MirModule, DriverError> {
+    let mut mir = lower_program(program)?;
+    insert_drops(&mut mir);
+    verify(&mir).map_err(|e| DriverError::Ice(e.to_string()))?;
+    check_gfa(&mir).map_err(|e| DriverError::Ice(e.to_string()))?;
+    let opt_config = if opts.mir_opt && opts.effective_opt().mir_passes_enabled() {
+        OptConfig::default()
+    } else {
+        OptConfig::debug()
+    };
+    let (mir, _) = optimize(mir, &opt_config);
+    verify(&mir).map_err(|e| DriverError::Ice(e.to_string()))?;
+    Ok(mir)
 }
 
 pub fn compile_to_ir(
@@ -124,7 +145,7 @@ pub fn compile_to_executable(
         path.with_file_name(format!("{stem}{}", opts.target.exe_suffix()))
     });
 
-    let runtime = runtime_paths();
+    let runtime = link_sources(opts);
     let output = if opts.emit_ir {
         exe.with_extension("ll")
     } else if opts.emit_asm {
@@ -217,6 +238,10 @@ pub fn compile_project(
     } else {
         exe
     };
+    let mut opts = opts.clone();
+    if opts.extra_c.is_empty() {
+        opts.extra_c = discover_native_c(&project.root);
+    }
     let link_opts = LinkOptions {
         target: opts.target.clone(),
         opt: opts.effective_opt(),
@@ -225,7 +250,7 @@ pub fn compile_project(
         emit_ir_only: opts.emit_ir,
         extra_libs: opts.extra_libs.clone(),
     };
-    let linked = link_executable(&out.llvm_ir, &runtime_paths(), &link_opts)?;
+    let linked = link_executable(&out.llvm_ir, &link_sources(&opts), &link_opts)?;
     out.executable = Some(linked);
     Ok(out)
 }
@@ -237,10 +262,42 @@ impl BuildOptions {
     }
 }
 
+/// C sources under `native/` (recursive) linked into project binaries.
+pub fn discover_native_c(project_root: &Path) -> Vec<PathBuf> {
+    let native = project_root.join("native");
+    if !native.is_dir() {
+        return Vec::new();
+    }
+    let mut out = Vec::new();
+    fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
+        let Ok(entries) = std::fs::read_dir(dir) else {
+            return;
+        };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                walk(&path, out);
+            } else if path.extension().and_then(|e| e.to_str()) == Some("c") {
+                out.push(path);
+            }
+        }
+    }
+    walk(&native, &mut out);
+    out.sort();
+    out
+}
+
+fn link_sources(opts: &BuildOptions) -> Vec<PathBuf> {
+    let mut paths = runtime_paths();
+    paths.extend(opts.extra_c.iter().cloned());
+    paths
+}
+
 pub fn runtime_paths() -> Vec<PathBuf> {
     const NAMES: &[&str] = &[
         "buraaq_rt.c",
         "buraaq_std.c",
+        "buraaq_board.c",
         "buraaq_grid.c",
         "buraaq_hold.c",
         "buraaq_stream.c",
