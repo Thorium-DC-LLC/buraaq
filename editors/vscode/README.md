@@ -1,5 +1,7 @@
 # Buraaq for VS Code / Cursor
 
+**Publisher:** [ThoriumDC](https://marketplace.visualstudio.com/publishers/ThoriumDC) · **Extension id:** `ThoriumDC.buraaq`
+
 Language support for `.bq` files via **`buraaq lsp-server`**.
 
 ## Features
@@ -10,26 +12,25 @@ Language support for `.bq` files via **`buraaq lsp-server`**.
 - Format / rename / symbols when the server supports them
 - Command: **Buraaq: Restart Language Server**
 
-## Install (VS Code / Cursor)
+## Install
 
-Marketplace (after publish): search **Buraaq** or:
+Marketplace (after publish):
 
 ```text
 ext install ThoriumDC.buraaq
 ```
 
-From the GitHub Release VSIX:
+Or from the GitHub Release:
 
 ```powershell
 code --install-extension https://github.com/ThoriumDC/buraaq/releases/latest/download/buraaq-1.0.0.vsix
 ```
 
-Publish steps: [PUBLISH.md](PUBLISH.md).
-
+## Settings
 
 | Setting | Default | Description |
 |---------|---------|-------------|
 | `buraaq.lsp.path` | `buraaq` | Path to the Buraaq CLI |
 | `buraaq.lsp.trace` | `off` | `off` / `messages` / `verbose` |
 
-Publisher id for Marketplace: `ThoriumDC` (publish with `vsce` when ready).
+Publish: [PUBLISH.md](PUBLISH.md) — use PAT + `npx vsce publish` (do not hand-create the extension listing).
