@@ -25,6 +25,7 @@ Read in this order. Skip what you do not need.
 - [Performance](PERFORMANCE.md)
 - [Lumen](LUMEN.md) — optional native window (not the default path)
 - `std.flowdesk` — borderless Windows shell + Vein (see [STDLIB.md](STDLIB.md); demo in private `buraaq-play`)
+- [Editors](../editors/README.md) — VS Code, Vim, Neovim, Sublime, Helix, Zed, JetBrains
 
 ## Language internals (contributors)
 

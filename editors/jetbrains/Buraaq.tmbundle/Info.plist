@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>contactEmailRot13</key>
+  <string></string>
+  <key>contactName</key>
+  <string>Thorium DC, LLC</string>
+  <key>description</key>
+  <string>Buraaq (.bq) syntax</string>
+  <key>name</key>
+  <string>Buraaq</string>
+  <key>uuid</key>
+  <string>B7A11A00-BURA-AQ00-0000-000000000001</string>
+</dict>
+</plist>

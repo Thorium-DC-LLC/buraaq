@@ -1,0 +1,23 @@
+{
+  "name": "buraaq",
+  "version": "1.0.0",
+  "description": "Buraaq language support (.bq) with LSP",
+  "authors": ["Thorium DC, LLC <https://buraaq.dev>"],
+  "schema_version": 1,
+  "languages": {
+    "Buraaq": {
+      "grammars": ["buraaq"],
+      "path_suffixes": ["bq"],
+      "line_comments": ["#"],
+      "tab_size": 4,
+      "language_servers": ["buraaq"]
+    }
+  },
+  "language_servers": {
+    "buraaq": {
+      "command": "buraaq",
+      "args": ["lsp-server"],
+      "languages": ["Buraaq"]
+    }
+  }
+}

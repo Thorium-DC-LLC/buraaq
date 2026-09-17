@@ -129,6 +129,7 @@ The compiler frontend (lexer, parser, names, MIR, LLVM text) is written in Buraa
 | `examples/` | Language-tour / engineer-suite / release-gate |
 | `benchmarks/` | Gate B vs C++ `-O2` |
 | `docs/` | Spec, stack, book |
+| `editors/` | VS Code, Vim, Neovim, Sublime, Helix, Zed, JetBrains |
 | `compiler/` | Host CLI used to *build* this tree |
 | `dist/` | Packaged `buraaq` for `install.ps1` / `install.sh` |
 

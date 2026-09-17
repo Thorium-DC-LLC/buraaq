@@ -1,0 +1,46 @@
+# Publish VS Code extension to Marketplace when VSCE_PAT is set.
+# Create PAT: https://dev.azure.com → User settings → Personal access tokens
+#   Organization: All accessible organizations
+#   Scopes: Marketplace → Manage
+# Create publisher once: https://marketplace.visualstudio.com/manage
+#   Publisher ID must match package.json "publisher" (ThoriumDCLLC)
+#
+# Repo secret: VSCE_PAT
+
+name: Publish VS Code extension
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: editors/vscode
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+      - name: Install and package
+        run: |
+          npm ci
+          npm run compile
+          npx vsce package
+      - name: Upload VSIX to workflow artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: buraaq-vscode
+          path: editors/vscode/*.vsix
+      - name: Publish to Visual Studio Marketplace
+        if: ${{ secrets.VSCE_PAT != '' }}
+        run: npx vsce publish --pat "${{ secrets.VSCE_PAT }}"
+      - name: Attach VSIX to GitHub Release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "${{ github.event.release.tag_name }}" ./*.vsix --clobber --repo "$GITHUB_REPOSITORY"

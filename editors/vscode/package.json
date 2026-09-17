@@ -1,13 +1,29 @@
 {
   "name": "buraaq",
   "displayName": "Buraaq",
-  "description": "Buraaq language support — syntax, LSP diagnostics, completion, and more",
-  "version": "0.1.0",
-  "publisher": "buraaq",
+  "description": "Buraaq language — Write like Python. Run like C. Syntax, LSP, snippets.",
+  "version": "1.0.0",
+  "publisher": "ThoriumDCLLC",
+  "license": "MIT",
+  "icon": "media/icon.png",
+  "galleryBanner": {
+    "color": "#0D9488",
+    "theme": "dark"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Thorium-DC-LLC/buraaq.git"
+  },
+  "homepage": "https://buraaq.dev",
+  "bugs": {
+    "url": "https://github.com/Thorium-DC-LLC/buraaq/issues"
+  },
+  "qna": "marketplace",
   "engines": {
     "vscode": "^1.85.0"
   },
-  "categories": ["Programming Languages"],
+  "categories": ["Programming Languages", "Snippets", "Formatters"],
+  "keywords": ["buraaq", "bq", "llvm", "systems", "thorium"],
   "activationEvents": [
     "onLanguage:buraaq"
   ],
@@ -18,7 +34,11 @@
         "id": "buraaq",
         "aliases": ["Buraaq", "buraaq"],
         "extensions": [".bq"],
-        "configuration": "./language-configuration.json"
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./media/buraaq-file.svg",
+          "dark": "./media/buraaq-file.svg"
+        }
       }
     ],
     "grammars": [
@@ -28,13 +48,25 @@
         "path": "./syntaxes/buraaq.tmLanguage.json"
       }
     ],
+    "snippets": [
+      {
+        "language": "buraaq",
+        "path": "./snippets/buraaq.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "buraaq.restartServer",
+        "title": "Buraaq: Restart Language Server"
+      }
+    ],
     "configuration": {
       "title": "Buraaq",
       "properties": {
         "buraaq.lsp.path": {
           "type": "string",
           "default": "buraaq",
-          "description": "Path to the Buraaq CLI (must support `lsp-server`)."
+          "description": "Path to the Buraaq CLI (must support lsp-server)."
         },
         "buraaq.lsp.trace": {
           "type": "string",
@@ -46,13 +78,17 @@
     }
   },
   "scripts": {
-    "compile": "tsc -p .",
+    "sync-grammar": "node -e \"require('fs').copyFileSync('../shared/buraaq.tmLanguage.json','syntaxes/buraaq.tmLanguage.json')\"",
+    "compile": "npm run sync-grammar && tsc -p .",
     "watch": "tsc -watch -p .",
-    "package": "vsce package"
+    "vscode:prepublish": "npm run compile",
+    "package": "vsce package",
+    "publish": "vsce publish"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.0.0",
     "typescript": "^5.4.0"
   },
   "dependencies": {

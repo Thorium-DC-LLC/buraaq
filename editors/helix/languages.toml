@@ -1,0 +1,13 @@
+# Append to ~/.config/helix/languages.toml (or project .helix/languages.toml)
+
+[[language]]
+name = "buraaq"
+scope = "source.buraaq"
+file-types = ["bq"]
+comment-token = "#"
+indent = { tab-width = 4, unit = "    " }
+language-servers = ["buraaq"]
+
+[language-server.buraaq]
+command = "buraaq"
+args = ["lsp-server"]

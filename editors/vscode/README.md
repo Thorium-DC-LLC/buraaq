@@ -1,45 +1,35 @@
 # Buraaq for VS Code / Cursor
 
-Language support for `.bq` files via the Buraaq Language Server.
+Language support for `.bq` files via **`buraaq lsp-server`**.
 
 ## Features
 
-- Syntax highlighting (TextMate grammar)
-- Real-time teacher-style diagnostics
-- Autocomplete (keywords + definitions)
-- Hover information
-- Go to definition / references / rename
-- Format document
-- Code actions (quick fixes from compiler suggestions)
-- Signature help
-- Semantic tokens
-- Document & workspace symbols
-- Call hierarchy
+- Syntax highlighting (TextMate)
+- Snippets (`main`, `fn`, `keel`, `lumen`, `flowdesk`, …)
+- Diagnostics, completion, hover, go-to-definition (via LSP)
+- Format / rename / symbols when the server supports them
+- Command: **Buraaq: Restart Language Server**
 
-## Requirements
+## Install (VS Code / Cursor)
 
-Build the Buraaq compiler and ensure `buraaq` is on your `PATH`:
+Marketplace (after publish): search **Buraaq** or:
 
-```bash
-cd compiler
-cargo build --release
+```text
+ext install ThoriumDCLLC.buraaq
 ```
 
-The extension launches `buraaq lsp-server` over stdio.
+From the GitHub Release VSIX:
 
-## Configuration
+```powershell
+code --install-extension https://github.com/Thorium-DC-LLC/buraaq/releases/latest/download/buraaq-1.0.0.vsix
+```
+
+Publish steps: [PUBLISH.md](PUBLISH.md).
+
 
 | Setting | Default | Description |
 |---------|---------|-------------|
 | `buraaq.lsp.path` | `buraaq` | Path to the Buraaq CLI |
-| `buraaq.lsp.trace` | `off` | LSP trace verbosity |
+| `buraaq.lsp.trace` | `off` | `off` / `messages` / `verbose` |
 
-## Development
-
-```bash
-cd editors/vscode
-npm install
-npm run compile
-```
-
-Press F5 to launch an Extension Development Host.
+Publisher id for Marketplace: `ThoriumDCLLC` (publish with `vsce` when ready).
