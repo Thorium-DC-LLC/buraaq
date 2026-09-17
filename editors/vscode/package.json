@@ -1,8 +1,8 @@
 {
   "name": "buraaq",
   "displayName": "Buraaq",
-  "description": "Buraaq by Thorium DC — Write like Python. Run like C. Syntax highlighting, LSP, and snippets for .bq.",
-  "version": "1.0.0",
+  "description": "Buraaq by Thorium DC — Write like Python. Run like C. Syntax, LSP, snippets, and one-click compiler toolchain install.",
+  "version": "1.0.1",
   "publisher": "ThoriumDC",
   "author": {
     "name": "Thorium DC",
@@ -29,7 +29,9 @@
   "categories": ["Programming Languages", "Snippets", "Formatters"],
   "keywords": ["buraaq", "bq", "llvm", "systems", "thorium", "ThoriumDC"],
   "activationEvents": [
-    "onLanguage:buraaq"
+    "onLanguage:buraaq",
+    "onCommand:buraaq.installToolchain",
+    "onCommand:buraaq.installLlvm"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -62,6 +64,14 @@
       {
         "command": "buraaq.restartServer",
         "title": "Buraaq: Restart Language Server"
+      },
+      {
+        "command": "buraaq.installToolchain",
+        "title": "Buraaq: Install Compiler Toolchain"
+      },
+      {
+        "command": "buraaq.installLlvm",
+        "title": "Buraaq: Install LLVM (clang)"
       }
     ],
     "configuration": {
@@ -70,13 +80,18 @@
         "buraaq.lsp.path": {
           "type": "string",
           "default": "buraaq",
-          "description": "Path to the Buraaq CLI (must support lsp-server)."
+          "description": "Path to the Buraaq CLI (must support lsp-server). Leave as \"buraaq\" to use PATH or the extension-managed install."
         },
         "buraaq.lsp.trace": {
           "type": "string",
           "enum": ["off", "messages", "verbose"],
           "default": "off",
           "description": "LSP trace level."
+        },
+        "buraaq.toolchain.autoInstall": {
+          "type": "boolean",
+          "default": true,
+          "description": "When buraaq is missing, offer to download the official Release zip (Windows x64) into extension storage."
         }
       }
     }

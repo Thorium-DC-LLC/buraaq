@@ -5,17 +5,26 @@ import {
   ServerOptions,
   TransportKind,
 } from "vscode-languageclient/node";
+import {
+  ensureClangHint,
+  ensureToolchain,
+  installLlvmWinget,
+  installManagedToolchain,
+  resolveCli,
+} from "./toolchain";
 
 let client: LanguageClient | undefined;
 
-async function startClient(context: vscode.ExtensionContext): Promise<void> {
+async function startClient(
+  context: vscode.ExtensionContext,
+  command: string,
+): Promise<void> {
   if (client) {
     await client.stop();
     client = undefined;
   }
 
   const config = vscode.workspace.getConfiguration("buraaq");
-  const command = config.get<string>("lsp.path") ?? "buraaq";
   const trace = config.get<string>("lsp.trace") ?? "off";
 
   const serverOptions: ServerOptions = {
@@ -46,25 +55,66 @@ async function startClient(context: vscode.ExtensionContext): Promise<void> {
   context.subscriptions.push(output);
 }
 
+async function bootLanguageServer(context: vscode.ExtensionContext): Promise<void> {
+  const resolved = await ensureToolchain(context);
+  if (!resolved) {
+    void vscode.window.showWarningMessage(
+      "Buraaq compiler not found. Run “Buraaq: Install Compiler Toolchain”, or set `buraaq.lsp.path`.",
+    );
+    return;
+  }
+  await startClient(context, resolved.command);
+  void ensureClangHint();
+}
+
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   context.subscriptions.push(
     vscode.commands.registerCommand("buraaq.restartServer", async () => {
       try {
-        await startClient(context);
+        const resolved = (await resolveCli(context)) ?? (await ensureToolchain(context));
+        if (!resolved) {
+          void vscode.window.showErrorMessage("Buraaq CLI not found.");
+          return;
+        }
+        await startClient(context, resolved.command);
         void vscode.window.showInformationMessage("Buraaq language server restarted.");
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         void vscode.window.showErrorMessage(`Buraaq LSP restart failed: ${msg}`);
       }
     }),
+    vscode.commands.registerCommand("buraaq.installToolchain", async () => {
+      try {
+        const resolved = await installManagedToolchain(context);
+        await startClient(context, resolved.command);
+        void vscode.window.showInformationMessage(
+          `Buraaq toolchain installed (${resolved.command}). Integrated terminals pick it up via PATH.`,
+        );
+        void ensureClangHint();
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        void vscode.window.showErrorMessage(`Toolchain install failed: ${msg}`);
+      }
+    }),
+    vscode.commands.registerCommand("buraaq.installLlvm", async () => {
+      try {
+        await installLlvmWinget();
+        void vscode.window.showInformationMessage(
+          "LLVM installed. Restart terminals (or VS Code) if `clang` is still not found.",
+        );
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        void vscode.window.showErrorMessage(`LLVM install failed: ${msg}`);
+      }
+    }),
   );
 
   try {
-    await startClient(context);
+    await bootLanguageServer(context);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     void vscode.window.showWarningMessage(
-      `Buraaq LSP did not start (${msg}). Syntax highlighting still works. Install Buraaq and ensure \`buraaq\` is on PATH.`,
+      `Buraaq LSP did not start (${msg}). Syntax highlighting still works. Run “Buraaq: Install Compiler Toolchain”.`,
     );
   }
 }

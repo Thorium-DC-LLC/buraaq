@@ -2,15 +2,17 @@
 
 **Publisher:** [ThoriumDC](https://marketplace.visualstudio.com/publishers/ThoriumDC) · **Extension id:** `ThoriumDC.buraaq`
 
-Language support for `.bq` files via **`buraaq lsp-server`**.
+Language support for `.bq` files via **`buraaq lsp-server`**, plus optional **one-click compiler install**.
 
 ## Features
 
 - Syntax highlighting (TextMate)
-- Snippets (`main`, `fn`, `keel`, `lumen`, `flowdesk`, …)
+- Snippets (`main`, `fn`, `keel`, `lumen`, …)
 - Diagnostics, completion, hover, go-to-definition (via LSP)
 - Format / rename / symbols when the server supports them
-- Command: **Buraaq: Restart Language Server**
+- **Install Compiler Toolchain** — downloads the GitHub Release zip (`buraaq.exe` + `sysroot`) into extension storage
+- **Install LLVM (clang)** — winget `LLVM.LLVM` when clang is missing (Windows)
+- Integrated terminals get the managed toolchain on `PATH` for this window
 
 ## Install
 
@@ -20,11 +22,16 @@ From the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?
 ext install ThoriumDC.buraaq
 ```
 
-Or from the GitHub Release VSIX:
+Or from the GitHub Release VSIX.
 
-```powershell
-code --install-extension https://github.com/ThoriumDC/buraaq/releases/latest/download/buraaq-1.0.0.vsix
-```
+## First open
+
+If `buraaq` is not on `PATH`, the extension offers to install the official Windows x64 toolchain. You can also run:
+
+- **Buraaq: Install Compiler Toolchain**
+- **Buraaq: Install LLVM (clang)**
+
+Building still needs **clang**; the Release zip is the Buraaq CLI + stdlib, not a full LLVM tree.
 
 ## Settings
 
@@ -32,5 +39,6 @@ code --install-extension https://github.com/ThoriumDC/buraaq/releases/latest/dow
 |---------|---------|-------------|
 | `buraaq.lsp.path` | `buraaq` | Path to the Buraaq CLI |
 | `buraaq.lsp.trace` | `off` | `off` / `messages` / `verbose` |
+| `buraaq.toolchain.autoInstall` | `true` | Prompt to download toolchain when missing |
 
-Publish: [PUBLISH.md](PUBLISH.md) — use PAT + `npx vsce publish` (do not hand-create the extension listing).
+Publish: [PUBLISH.md](PUBLISH.md).
