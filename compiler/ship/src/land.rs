@@ -87,8 +87,12 @@ fn next_txt(cloud: Cloud) -> String {
          4. Copy ~/.buraaq/dock/token (or BURAAQ_DOCK_TOKEN) to your laptop.\n\
          5. Copy env.example to ~/.buraaq/dock/env and set BURAAQ_DATABASE_URL\n\
             (one file; Neon: sslmode=require). That is the only host config.\n\
-            `buraaq ship HOST` then installs systemd Restart=always for the app.\n\
-         6. From the project on Linux:  buraaq pack && buraaq ship HOST\n\n\
+            Dock binds loopback by default — ship via SSH tunnel:\n\
+              ssh -L 7422:127.0.0.1:7422 user@HOST\n\
+              buraaq ship 127.0.0.1\n\
+            Or edit the unit to `buraaq dock --public` if you intentionally expose :7422.\n\
+            `buraaq ship` then installs systemd Restart=always for the app.\n\
+         6. From the project on Linux:  buraaq pack && buraaq ship 127.0.0.1\n\n\
          Same path on AWS, Azure, GCP, Hetzner, and a rack. The cloud is a hostname.\n",
         label = cloud.label(),
         fw = cloud.firewall()
@@ -173,7 +177,7 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
-ExecStart=buraaq dock --public
+ExecStart=buraaq dock
 Restart=always
 RestartSec=3
 EnvironmentFile=-/root/.buraaq/dock/env
@@ -183,7 +187,7 @@ WantedBy=multi-user.target
 UNIT
     systemctl daemon-reload
     systemctl enable --now buraaq-dock.service
-    echo "Dock systemd unit: buraaq-dock.service (Restart=always)"
+    echo "Dock systemd unit: buraaq-dock.service (loopback :7422, Restart=always)"
     return 0
   fi
   if command -v systemctl >/dev/null 2>&1; then
@@ -195,7 +199,7 @@ Description=Buraaq Dock
 After=network.target
 
 [Service]
-ExecStart=buraaq dock --public
+ExecStart=buraaq dock
 Restart=always
 RestartSec=3
 EnvironmentFile=-%h/.buraaq/dock/env
@@ -213,15 +217,17 @@ if command -v systemctl >/dev/null 2>&1 && start_dock_systemd; then
   :
 else
   load_dock_env
-  nohup buraaq dock --public >/tmp/buraaq-dock.log 2>&1 &
-  echo "no systemd — Dock started with nohup (log /tmp/buraaq-dock.log)"
+  nohup buraaq dock >/tmp/buraaq-dock.log 2>&1 &
+  echo "no systemd — Dock started with nohup on loopback (log /tmp/buraaq-dock.log)"
 fi
-echo "Dock should answer on :7422"
+echo "Dock should answer on 127.0.0.1:7422"
 echo "Token: $HOME/.buraaq/dock/token"
-echo "One config file: $HOME/.buraaq/dock/env  (BURAAQ_DATABASE_URL). Then: buraaq ship HOST"
+echo "One config file: $HOME/.buraaq/dock/env  (BURAAQ_DATABASE_URL)."
+echo "Ship via SSH tunnel: ssh -L 7422:127.0.0.1:7422 user@HOST && buraaq ship 127.0.0.1"
+echo "To expose Dock on the network, change ExecStart to: buraaq dock --public"
 echo "Apps get systemd Restart=always when you ship. Do not nohup the Keel binary by hand."
-echo "App TLS is Keel on 8443. Control plane is HTTP + token — put a reverse proxy in front if this host is public."
-echo "If this is Hetzner: allow TCP 7422, 8080, 8443 on the Cloud Firewall."
+echo "App TLS is Keel on 8443. Control plane is HTTP + token on loopback by default."
+echo "If this is Hetzner: allow TCP 8080, 8443 on the Cloud Firewall (7422 only if --public)."
 "#;
 
 const DOCK_UNIT: &str = r#"[Unit]
@@ -229,7 +235,7 @@ Description=Buraaq Dock
 After=network.target
 
 [Service]
-ExecStart=buraaq dock --public
+ExecStart=buraaq dock
 Restart=always
 EnvironmentFile=-%h/.buraaq/dock/env
 
@@ -256,12 +262,14 @@ mod tests {
         assert!(next.contains("7422"), "{next}");
         assert!(next.contains("BURAAQ_DATABASE_URL"), "{next}");
         let sh = fs::read_to_string(dir.join("land.sh")).unwrap();
-        assert!(sh.contains("buraaq dock --public"), "{sh}");
+        assert!(sh.contains("ExecStart=buraaq dock\n"), "{sh}");
+        assert!(!sh.contains("ExecStart=buraaq dock --public"), "{sh}");
         assert!(sh.contains("EnvironmentFile"), "{sh}");
         assert!(sh.contains("libpq5"), "{sh}");
         assert!(sh.contains("load_dock_env"), "{sh}");
         assert!(sh.contains("Restart=always"), "{sh}");
         assert!(sh.contains("/etc/systemd/system"), "{sh}");
+        assert!(sh.contains("ssh -L 7422"), "{sh}");
         let cloud = fs::read_to_string(dir.join("cloud.txt")).unwrap();
         assert!(cloud.contains("Hetzner"), "{cloud}");
         let env = fs::read_to_string(dir.join("env.example")).unwrap();

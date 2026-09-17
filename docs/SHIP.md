@@ -65,7 +65,7 @@ The `.bur` includes:
 
 - `bin/<exe>` — release native binary
 - `public/**` — if present
-- `cert.pem` / `key.pem` — if present
+- `cert.pem` — if present (TLS **private keys are never packed**)
 - `buraaq.pkg`
 
 Every byte before the trailing digest is SHA-256 hashed. Tamper → refuse to launch.

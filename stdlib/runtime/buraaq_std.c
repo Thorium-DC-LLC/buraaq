@@ -17,12 +17,14 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <arpa/inet.h>
 #ifdef BURAAQ_OPENSSL
 #include <openssl/err.h>
 #include <openssl/ssl.h>
+#include <openssl/x509.h>
 #endif
 #endif
 
@@ -346,6 +348,8 @@ static char *http_tls_exchange(int fd, const char *host, const char *req) {
         return NULL;
     }
     SSL_CTX_set_default_verify_paths(ctx);
+    SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, NULL);
+    SSL_CTX_set_min_proto_version(ctx, TLS1_2_VERSION);
     SSL *ssl = SSL_new(ctx);
     if (!ssl) {
         SSL_CTX_free(ctx);
@@ -355,6 +359,14 @@ static char *http_tls_exchange(int fd, const char *host, const char *req) {
     SSL_set_fd(ssl, fd);
     SSL_set_tlsext_host_name(ssl, host);
     if (SSL_connect(ssl) != 1) {
+        SSL_free(ssl);
+        SSL_CTX_free(ctx);
+        close(fd);
+        return NULL;
+    }
+    long vr = SSL_get_verify_result(ssl);
+    if (vr != X509_V_OK) {
+        SSL_shutdown(ssl);
         SSL_free(ssl);
         SSL_CTX_free(ctx);
         close(fd);
@@ -494,8 +506,17 @@ char *buraaq_http_get_body(const char *url) {
     if (strncmp(url, "file://", 7) == 0) {
         const char *path = url + 7;
 #ifdef _WIN32
-        if (path[0] == '/') path++;
+        if (path[0] == '/' && path[1] && path[2] == ':') path++;
 #endif
+        /* Refuse escapes and UNC / absolute-network forms. Relative project paths only. */
+        if (!path[0] || path[0] == '/' || path[0] == '\\' || strstr(path, "..") != NULL
+            || strstr(path, "\\\\") != NULL
+#ifdef _WIN32
+            || (path[0] && path[1] == ':')
+#endif
+        ) {
+            return NULL;
+        }
         return buraaq_file_read(path);
     }
 #ifdef _WIN32
@@ -606,6 +627,49 @@ void buraaq_mutex_free(void *m) {
 }
 
 int32_t buraaq_process_exit_code(const char *cmd) {
-    if (!cmd) return -1;
-    return (int32_t)system(cmd);
+    if (!cmd || !cmd[0]) return -1;
+    /* No shell: refuse metacharacters; run the program path only. */
+    for (const char *p = cmd; *p; p++) {
+        unsigned char c = (unsigned char)*p;
+        if (c == '|' || c == '&' || c == ';' || c == '`' || c == '$' || c == '>' || c == '<'
+            || c == '\n' || c == '\r' || c == '"' || c == '\'' || c == '\\') {
+            return -1;
+        }
+#ifdef _WIN32
+        if (c == '%') return -1;
+#endif
+    }
+    if (strstr(cmd, "..") != NULL) return -1;
+#ifdef _WIN32
+    {
+        STARTUPINFOA si;
+        PROCESS_INFORMATION pi;
+        memset(&si, 0, sizeof(si));
+        memset(&pi, 0, sizeof(pi));
+        si.cb = sizeof(si);
+        if (!CreateProcessA(cmd, NULL, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
+            return -1;
+        }
+        WaitForSingleObject(pi.hProcess, INFINITE);
+        DWORD code = 1;
+        GetExitCodeProcess(pi.hProcess, &code);
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+        return (int32_t)code;
+    }
+#else
+    {
+        pid_t pid = fork();
+        if (pid < 0) return -1;
+        if (pid == 0) {
+            char *argv[] = {(char *)cmd, NULL};
+            execv(cmd, argv);
+            _exit(127);
+        }
+        int st = 0;
+        if (waitpid(pid, &st, 0) < 0) return -1;
+        if (WIFEXITED(st)) return (int32_t)WEXITSTATUS(st);
+        return -1;
+    }
+#endif
 }

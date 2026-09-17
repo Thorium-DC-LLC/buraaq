@@ -246,11 +246,16 @@ Unknown paths return `404` with `text/plain`. Unsupported methods on a resource 
 | `BURAAQ_TLS_CERT` | PEM certificate path |
 | `BURAAQ_TLS_KEY` | PEM private key path |
 | `BURAAQ_API_KEY` | Override generated API key |
-| `BURAAQ_API_LOCK` | `1` — require the key on all `/api/*` except health |
-| `BURAAQ_CORS_ORIGIN` | `*` or comma-separated origins |
+| `BURAAQ_API_LOCK` | `1` — require the key on all `/api/*` except health (on automatically when public) |
+| `BURAAQ_PUBLIC` | `1` — bind `0.0.0.0`, enable API lock, cleartext HTTP only if `BURAAQ_HTTP=1` |
+| `BURAAQ_BIND` | Override listen address (`127.0.0.1` default; `0.0.0.0` implies public) |
+| `BURAAQ_HTTP` | `1` — also bind cleartext HTTP when public (TLS still preferred) |
+| `BURAAQ_CORS_ORIGIN` | Explicit allow-list (default deny; never reflect arbitrary Origin) |
 | `BURAAQ_HTTP_PORT` | Cleartext port (default 8080) |
 | `BURAAQ_TLS_PORT` | TLS port (default 8443) |
 | `USERNAME` | Windows SSPI user fallback inside libpq connect |
+
+Keel listens on **loopback** unless `BURAAQ_PUBLIC=1` or `BURAAQ_BIND=0.0.0.0`. Local `buraaq run` stays one command; production needs an explicit public switch.
 
 Working directory matters: `page` paths and default `cert.pem` / `key.pem` are relative to it. Run from the project root (`buraaq run` or `run.ps1`).
 
@@ -279,13 +284,12 @@ Headers: `stdlib/runtime/buraaq_std.h`.
 
 - Table and column names are allowlisted identifiers; they are not taken from request URLs except the numeric id.
 - Field values are escaped with libpq `PQescapeLiteral`.
-- TLS is real OpenSSL when certs load; default play certs are self-signed.
-- The API has no authentication. Put it behind your edge if it must not be public.
-- CORS is origin-aware. Default allows `*`. Set `origin("https://app.example")` or `BURAAQ_CORS_ORIGIN` to a comma list. Unknown origins are not reflected.
-- Every API gets a key (`.buraaq/api.key`, `BURAAQ_API_KEY`, or `key("…")`). Cross-origin and curl **writes** need `X-Api-Key` / `Authorization: Bearer`. Same-origin browser UI from this process still posts without a key. `BURAAQ_API_LOCK=1` requires the key on all `/api/*` except health.
-- If `cert.pem` / `key.pem` are missing, Keel tries to generate a localhost TLS pair with `openssl`.
-- Page files cannot contain `..`.
-- Table and column names are allowlisted identifiers; they are not taken from request URLs except the numeric id.
+- TLS is real OpenSSL when certs load; default play certs are self-signed (TLS 1.2+).
+- Bind is **loopback** unless `BURAAQ_PUBLIC=1`. Public mode turns API lock on and keeps cleartext HTTP opt-in.
+- CORS defaults to deny. Set `origin("https://app.example")` or `BURAAQ_CORS_ORIGIN`. Unknown origins are not reflected.
+- Every API gets a key (`.buraaq/api.key`, `BURAAQ_API_KEY`, or `key("…")`). Network writes need `X-Api-Key` / `Authorization: Bearer`. Loopback same-origin pages may write without a header when the API is unlocked. `Origin` alone is never auth from the network.
+- If `cert.pem` / `key.pem` are missing, Keel tries to generate a localhost TLS pair with `openssl` (spawn, not shell).
+- Page files cannot contain `..` and must stay under the project tree.
 - One accept loop, blocking read/write — high performance relative to interpreters, not a full HTTP/2 thread pool.
 
 ---

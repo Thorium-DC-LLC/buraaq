@@ -342,7 +342,12 @@ int32_t buraaq_stream_bind(int32_t port) {
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    /* Loopback unless BURAAQ_PUBLIC=1 (same policy as Keel). */
+    {
+        const char *pub = getenv("BURAAQ_PUBLIC");
+        int any = pub && (pub[0] == '1' || pub[0] == 'y' || pub[0] == 'Y' || pub[0] == 't' || pub[0] == 'T');
+        addr.sin_addr.s_addr = htonl(any ? INADDR_ANY : INADDR_LOOPBACK);
+    }
     addr.sin_port = htons((unsigned short)port);
     if (bind(fd, (struct sockaddr *)&addr, sizeof(addr)) == SOCKET_ERROR) {
         bq_close_sock(fd);

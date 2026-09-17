@@ -36,12 +36,31 @@ pub fn launch_bundle(bytes: &[u8], mode: LaunchMode) -> Result<u32, LaunchError>
 }
 
 pub fn launch_extracted(bundle: &Bundle, dir: &Path, mode: LaunchMode) -> Result<u32, LaunchError> {
+    if !crate::bundle::exe_ok(&bundle.exe) {
+        return Err(LaunchError::Msg(format!(
+            "unsafe exe in ship: {}",
+            bundle.exe
+        )));
+    }
     let exe = dir.join("bin").join(&bundle.exe);
     if !exe.is_file() {
         return Err(LaunchError::Msg(format!(
             "extracted binary missing: {}",
             exe.display()
         )));
+    }
+    // Refuse absolute or escaped paths even if the OS joined oddly.
+    let bin_root = dir.join("bin");
+    let canon_exe = exe
+        .canonicalize()
+        .map_err(|e| LaunchError::Msg(e.to_string()))?;
+    let canon_bin = bin_root
+        .canonicalize()
+        .map_err(|e| LaunchError::Msg(e.to_string()))?;
+    if !canon_exe.starts_with(&canon_bin) {
+        return Err(LaunchError::Msg(
+            "extracted binary escaped bin/ — refusing to launch".into(),
+        ));
     }
     #[cfg(unix)]
     {
@@ -143,8 +162,26 @@ fn apply_host_env(cmd: &mut Command) {
     let Ok(text) = fs::read_to_string(&p) else {
         return;
     };
+    const ALLOW: &[&str] = &[
+        "BURAAQ_DATABASE_URL",
+        "DATABASE_URL",
+        "BURAAQ_API_KEY",
+        "BURAAQ_CORS_ORIGIN",
+        "BURAAQ_API_LOCK",
+        "BURAAQ_PUBLIC",
+        "BURAAQ_BIND",
+        "BURAAQ_HTTP",
+        "BURAAQ_HTTP_PORT",
+        "BURAAQ_TLS_PORT",
+        "BURAAQ_TLS_CERT",
+        "BURAAQ_TLS_KEY",
+        "BURAAQ_PG_LOCAL",
+        "BURAAQ_PG_CHANNEL_BINDING",
+    ];
     for (k, v) in parse_env_file(&text) {
-        cmd.env(k, v);
+        if ALLOW.iter().any(|a| *a == k) {
+            cmd.env(k, v);
+        }
     }
 }
 
@@ -229,7 +266,7 @@ fn try_systemd_supervise(name: &str, exe: &Path, dir: &Path) -> Option<u32> {
             eprintln!("buraaq ship: systemctl enable --now {unit} failed — falling back to a raw process");
             return None;
         }
-        let pid = systemd_main_pid(extra, &unit).unwrap_or(1);
+        let pid = systemd_main_pid(extra, &unit)?;
         eprintln!("buraaq ship: systemd Restart=always ({unit} pid={pid})");
         Some(pid)
     }

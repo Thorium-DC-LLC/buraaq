@@ -734,6 +734,10 @@ fn cmd_dock(args: &[String]) -> CmdResult {
             1
         })?
     };
+    if token.trim().is_empty() {
+        eprintln!("error: dock token is empty — set BURAAQ_DOCK_TOKEN or delete ~/.buraaq/dock/token");
+        return Err(1);
+    }
     buraaq_ship::serve_dock(buraaq_ship::DockOptions { bind, token }).map_err(|e| {
         eprintln!("error: {e}");
         1

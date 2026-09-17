@@ -64,15 +64,18 @@ pub fn pack(req: &PackRequest) -> Result<PathBuf, BundleError> {
     if pkg.is_file() {
         files.push(("buraaq.pkg".into(), fs::read(&pkg)?));
     }
-    for name in ["cert.pem", "key.pem"] {
-        let p = req.root.join(name);
-        if p.is_file() {
-            files.push((name.into(), fs::read(&p)?));
-        }
+    // Public cert only — private keys stay on the host (never in .bur).
+    let cert = req.root.join("cert.pem");
+    if cert.is_file() {
+        files.push(("cert.pem".into(), fs::read(&cert)?));
     }
     let public = req.root.join("public");
     if public.is_dir() {
-        for entry in WalkDir::new(&public).into_iter().filter_map(|e| e.ok()) {
+        for entry in WalkDir::new(&public)
+            .follow_links(false)
+            .into_iter()
+            .filter_map(|e| e.ok())
+        {
             if !entry.file_type().is_file() {
                 continue;
             }
@@ -173,10 +176,15 @@ fn decode(bytes: &[u8]) -> Result<Bundle, BundleError> {
     i += mlen;
     let meta = parse_manifest(manifest)?;
     let nfiles = read_u32(payload, &mut i)? as usize;
-    let mut files = Vec::with_capacity(nfiles);
+    const MAX_FILES: usize = 100_000;
+    if nfiles > MAX_FILES {
+        return Err(BundleError::Msg("too many files in bundle".into()));
+    }
+    let remaining = payload.len().saturating_sub(i);
+    let mut files = Vec::with_capacity(nfiles.min(remaining / 8));
     for _ in 0..nfiles {
         let plen = read_u16(payload, &mut i)? as usize;
-        if i + plen > payload.len() {
+        if i.checked_add(plen).map(|e| e > payload.len()).unwrap_or(true) {
             return Err(BundleError::Msg("truncated path".into()));
         }
         let path = std::str::from_utf8(&payload[i..i + plen])
@@ -186,8 +194,9 @@ fn decode(bytes: &[u8]) -> Result<Bundle, BundleError> {
         if !path_ok(&path) {
             return Err(BundleError::Msg(format!("unsafe path in bundle: {path}")));
         }
-        let size = read_u64(payload, &mut i)? as usize;
-        if i + size > payload.len() {
+        let size_u = read_u64(payload, &mut i)?;
+        let size = usize::try_from(size_u).map_err(|_| BundleError::Msg("file too large".into()))?;
+        if i.checked_add(size).map(|e| e > payload.len()).unwrap_or(true) {
             return Err(BundleError::Msg("truncated file".into()));
         }
         files.push((path, payload[i..i + size].to_vec()));
@@ -220,6 +229,11 @@ fn parse_manifest(s: &str) -> Result<(String, String, String), BundleError> {
     }
     if !ident_ok(&name) {
         return Err(BundleError::Msg("invalid app name in manifest".into()));
+    }
+    if !exe_ok(&exe) {
+        return Err(BundleError::Msg(
+            "invalid exe in manifest (bare filename under bin/ only)".into(),
+        ));
     }
     Ok((name, version, exe))
 }
@@ -268,6 +282,21 @@ pub fn path_ok(p: &str) -> bool {
         .all(|ch| ch.is_ascii_alphanumeric() || matches!(ch, '_' | '-' | '.' | '/' ))
 }
 
+/// Bare executable name for `bin/<exe>` — no path separators or absolute paths.
+pub fn exe_ok(exe: &str) -> bool {
+    if exe.is_empty() || exe.contains('/') || exe.contains('\\') || exe.contains("..") {
+        return false;
+    }
+    #[cfg(windows)]
+    {
+        if exe.len() >= 2 && exe.as_bytes()[1] == b':' {
+            return false;
+        }
+    }
+    exe.chars()
+        .all(|ch| ch.is_ascii_alphanumeric() || matches!(ch, '_' | '-' | '.'))
+}
+
 fn ct_eq(a: &[u8], b: &[u8]) -> bool {
     if a.len() != b.len() {
         return false;
@@ -305,5 +334,9 @@ mod tests {
         assert!(!path_ok("../etc/passwd"));
         assert!(!path_ok("/abs"));
         assert!(path_ok("public/index.html"));
+        assert!(exe_ok("app.exe"));
+        assert!(!exe_ok("../evil"));
+        assert!(!exe_ok("/bin/sh"));
+        assert!(!exe_ok(r"C:\Windows\System32\cmd.exe"));
     }
 }

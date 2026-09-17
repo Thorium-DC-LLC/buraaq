@@ -198,7 +198,7 @@ fn reply(s: &mut TcpStream, status: u16, body: &str) -> Result<(), String> {
         _ => "Error",
     };
     let msg = format!(
-        "HTTP/1.1 {status} {reason}\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Length: {}\r\nConnection: close\r\nAccess-Control-Allow-Origin: *\r\n\r\n{body}",
+        "HTTP/1.1 {status} {reason}\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
         body.len()
     );
     s.write_all(msg.as_bytes()).map_err(|e| e.to_string())
@@ -208,32 +208,60 @@ pub fn load_or_create_token() -> Result<String, String> {
     fs::create_dir_all(dock_root()).map_err(|e| e.to_string())?;
     let p = token_path();
     if p.is_file() {
-        return Ok(fs::read_to_string(p).map_err(|e| e.to_string())?.trim().to_string());
+        let tok = fs::read_to_string(&p).map_err(|e| e.to_string())?.trim().to_string();
+        if tok.is_empty() || tok.chars().all(|c| c == '0') {
+            return Err("dock token file is empty or all zeros — delete it and restart dock".into());
+        }
+        return Ok(tok);
     }
-    let tok = random_token();
-    fs::write(&p, &tok).map_err(|e| e.to_string())?;
+    let tok = random_token()?;
+    write_token_file(&p, &tok)?;
     eprintln!("  created token {}", p.display());
     Ok(tok)
 }
 
-fn random_token() -> String {
-    let mut buf = [0u8; 32];
-    fill_random(&mut buf);
-    buf.iter().map(|b| format!("{b:02x}")).collect()
+fn write_token_file(p: &std::path::Path, tok: &str) -> Result<(), String> {
+    fs::write(p, tok).map_err(|e| e.to_string())?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mut perms = fs::metadata(p).map_err(|e| e.to_string())?.permissions();
+        perms.set_mode(0o600);
+        fs::set_permissions(p, perms).map_err(|e| e.to_string())?;
+    }
+    Ok(())
 }
 
-fn fill_random(buf: &mut [u8]) {
+fn random_token() -> Result<String, String> {
+    let mut buf = [0u8; 32];
+    fill_random(&mut buf)?;
+    if buf.iter().all(|&b| b == 0) {
+        return Err("CSPRNG returned zeros — refusing to create dock token".into());
+    }
+    Ok(buf.iter().map(|b| format!("{b:02x}")).collect())
+}
+
+fn fill_random(buf: &mut [u8]) -> Result<(), String> {
     #[cfg(windows)]
     {
-        unsafe {
-            let _ = SystemFunction036(buf.as_mut_ptr(), buf.len() as u32);
+        let ok = unsafe { SystemFunction036(buf.as_mut_ptr(), buf.len() as u32) };
+        if ok == 0 {
+            return Err("SystemFunction036 failed — cannot create dock token".into());
         }
+        Ok(())
     }
     #[cfg(unix)]
     {
-        if let Ok(mut f) = fs::File::open("/dev/urandom") {
-            let _ = f.read_exact(buf);
-        }
+        let mut f = fs::File::open("/dev/urandom")
+            .map_err(|e| format!("cannot open /dev/urandom: {e}"))?;
+        f.read_exact(buf)
+            .map_err(|e| format!("cannot read /dev/urandom: {e}"))?;
+        Ok(())
+    }
+    #[cfg(not(any(windows, unix)))]
+    {
+        let _ = buf;
+        Err("no CSPRNG on this platform".into())
     }
 }
 

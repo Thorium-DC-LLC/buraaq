@@ -164,9 +164,18 @@ static int http_do(const char *method, const char *url, const char *body, char *
     char host[128] = {0};
     char path[256] = "/";
     int port = 80;
+    int https = 0;
     const char *p = url;
-    if (!strncmp(p, "http://", 7)) p += 7;
-    else if (!strncmp(p, "https://", 8)) p += 8;
+    if (!strncmp(p, "https://", 8)) {
+        https = 1;
+        port = 443;
+        p += 8;
+    } else if (!strncmp(p, "http://", 7)) {
+        p += 7;
+    } else {
+        InternetCloseHandle(ses);
+        return 0;
+    }
     const char *slash = strchr(p, '/');
     const char *colon = strchr(p, ':');
     if (colon && (!slash || colon < slash)) {
@@ -191,8 +200,9 @@ static int http_do(const char *method, const char *url, const char *body, char *
         return 0;
     }
     const char *hdr = "Content-Type: application/json\r\n";
-    HINTERNET hr = HttpOpenRequestA(con, method, path, NULL, NULL, NULL,
-                                    INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_CACHE_WRITE, 0);
+    DWORD flags = INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_NO_UI;
+    if (https) flags |= INTERNET_FLAG_SECURE;
+    HINTERNET hr = HttpOpenRequestA(con, method, path, NULL, NULL, NULL, flags, 0);
     if (!hr) {
         InternetCloseHandle(con);
         InternetCloseHandle(ses);
@@ -384,8 +394,11 @@ static void ui_post_create(void) {
         return;
     }
     if (g_bound) {
-        char payload[1024];
-        snprintf(payload, sizeof(payload), "{\"title\":\"%s\",\"body\":\"%s\"}", title, body);
+        char te[512], be[1024];
+        char payload[1600];
+        json_esc(title, te, sizeof(te));
+        json_esc(body, be, sizeof(be));
+        snprintf(payload, sizeof(payload), "{\"title\":\"%s\",\"body\":\"%s\"}", te, be);
         char url[320];
         char resp[4096];
         snprintf(url, sizeof(url), "%s/api/%s", g_bind_base, g_bind_res);
@@ -828,12 +841,14 @@ int32_t buraaq_ui_bind(const char *base_url, const char *resource) {
     g_bound = 1;
     g_bind_base[0] = 0;
     g_bind_res[0] = 0;
-    if (base_url) {
+    if (base_url && base_url[0]) {
         strncpy(g_bind_base, base_url, sizeof(g_bind_base) - 1);
         size_t n = strlen(g_bind_base);
         while (n && g_bind_base[n - 1] == '/') {
             g_bind_base[--n] = 0;
         }
+    } else {
+        strncpy(g_bind_base, "https://127.0.0.1:8443", sizeof(g_bind_base) - 1);
     }
     if (resource) strncpy(g_bind_res, resource, sizeof(g_bind_res) - 1);
     ui_add(UI_LIST, "list", resource ? resource : "items");

@@ -63,9 +63,10 @@ Out of scope:
 
 - Compiler pipeline fuzz (mutated programs + random bytes); Gate D is a 7-day wall-clock run
 - Invalid programs must produce diagnostics, not process abort (except OOM)
-- Ships are SHA-256 hashed; path `..` is rejected; Dock mutations need a bearer token
-- App TLS is independent of Dock HTTP. Keep `:7422` off the public internet unless you intend remote `buraaq ship`
+- Ships are SHA-256 hashed; path `..` and unsafe exe names are rejected; private keys are not packed; Dock mutations need a bearer token (CSPRNG, mode 0600)
+- Keel and Dock bind **loopback** by default. Opt in with `BURAAQ_PUBLIC=1` or `buraaq dock --public`. Prefer SSH tunnel for remote ship
+- HTTPS clients verify peer certificates; `file://` and process spawn refuse shell metacharacters / path escapes
 
 ## Secrets
 
-Never commit `BURAAQ_DATABASE_URL`, dock tokens, or API keys. Put them on the **host** environment. Rotate any credential that has appeared in a chat, a log, or a screenshot.
+Never commit `BURAAQ_DATABASE_URL`, dock tokens, or API keys. Put them on the **host** environment (`~/.buraaq/dock/env` allowlist for launched apps). Rotate any credential that has appeared in a chat, a log, or a screenshot.
