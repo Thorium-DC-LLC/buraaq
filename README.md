@@ -30,9 +30,16 @@ Site: [buraaq.dev](https://buraaq.dev)
 
 You need **Buraaq** and **clang**. You do **not** need Rust, Cargo, Node, or a JVM.
 
-**Windows binary:** [github.com/Thorium-DC-LLC/buraaq/releases/latest](https://github.com/Thorium-DC-LLC/buraaq/releases/latest)
+### Windows (recommended)
 
-Or clone and install (packs `dist/buraaq` + stdlib onto PATH):
+After the package is on winget (see [packaging/winget](packaging/winget/README.md)):
+
+```powershell
+winget install buraaq
+buraaq doctor
+```
+
+Until the winget PR is merged, install from the [latest GitHub Release](https://github.com/Thorium-DC-LLC/buraaq/releases/latest) zip (`buraaq-*-windows-x64.zip`: exe + sysroot), or:
 
 ```powershell
 git clone https://github.com/Thorium-DC-LLC/buraaq.git
@@ -95,7 +102,7 @@ Gate B: equivalent **n**, Buraaq `--release` vs C++ `-O2`, clang 22. n was not r
 
 ## Already on the metal
 
-`examples/forge` is a complete 1.0 app: modules, ownership, spawn, generics, a Keel ledger on Postgres, hashed ship, Land. It ran as a **native process** on Hetzner (HTTP 8080 / TLS 8443) without touching Docker services already on that host.
+Buraaq ships native binaries and Land kits. End-to-end demos (Forge ledger, Flowdesk, etc.) live in a **separate** local tree — `buraaq-play` — and are not part of this public repository.
 
 Secrets stay in host env. Never in git. Test only machines you own or are authorized to use. **Do not abuse.** [SECURITY.md](SECURITY.md) — Thorium DC cooperates with lawful agency requests.
 
@@ -119,7 +126,7 @@ The compiler frontend (lexer, parser, names, MIR, LLVM text) is written in Buraa
 |------|---------|
 | `compiler-buraaq/` | Compiler written in Buraaq |
 | `stdlib/` | Standard library + C runtime |
-| `examples/forge/` | Complete app |
+| `examples/` | Language-tour / engineer-suite / release-gate |
 | `benchmarks/` | Gate B vs C++ `-O2` |
 | `docs/` | Spec, stack, book |
 | `compiler/` | Host CLI used to *build* this tree |

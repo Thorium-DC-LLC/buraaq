@@ -192,6 +192,26 @@ Full reference: [LUMEN.md](LUMEN.md).
 | `bind(url, resource)` | Keel REST list + create + delete |
 | `show()` | Event loop until the window closes |
 
+### `std.flowdesk`
+
+Borderless Windows product shell — custom chrome, **Settings** + **Flow**, and **Vein** text.
+
+```
+use std.flowdesk.{desk, show}
+
+fn main() {
+    desk("Flowdesk", 1100, 720)
+    show()
+}
+```
+
+Vein reads focused-app text through **UI Automation** (accessibility tree) — no screen capture, no OCR. Settings stores the context API URL; Flow posts `{"text":…}` and shows returned `context`. Demo app: private `buraaq-play/flowdesk` (not shipped in this repo).
+
+| API | Description |
+|-----|-------------|
+| `desk(title, w, h)` | Borderless native window |
+| `show()` | Chrome + Settings/Flow until close |
+
 ### `std.keel`
 
 APIs and TLS servers — **the hull of the app**. `std.service` is the same module under the old name.

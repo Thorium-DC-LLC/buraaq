@@ -135,7 +135,7 @@ On Windows, `~` is `%USERPROFILE%`.
 
 A Windows `.bur` will not run on Linux. `buraaq build --release --emit-ir --target linux` emits IR for a Linux clang link when you cannot pack on the host.
 
-Forge (`examples/forge`) is the complete app that was landed this way.
+The Forge demo that was landed this way lives in the private `buraaq-play` tree, not in this public repository.
 
 ## Toolchain, not a module
 

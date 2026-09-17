@@ -247,6 +247,7 @@ pub fn runtime_paths() -> Vec<PathBuf> {
         "buraaq_runtime.c",
         "buraaq_server.c",
         "buraaq_lumen.c",
+        "buraaq_flowdesk.c",
     ];
     let driver = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let mut dirs = Vec::new();

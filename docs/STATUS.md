@@ -17,7 +17,7 @@ Do not print `BURAAQ 1.0 RELEASE GATES: PASS` until A–J all pass, including a 
 - Ship `.bur` / Dock `:7422` / Land kits (`aws`, `azure`, `gcp`, `hetzner`, `bare`)
 - Compiler frontend in Buraaq: lexer, parser, names, MIR, LLVM text (M3–M10)
 - Install copies packaged `dist/buraaq` + clang sidecar — **Rust is not required to use Buraaq**
-- Forge (`examples/forge`): ownership, spawn, generics, Keel ledger, pack, Hetzner land
+- Forge (private `buraaq-play/forge`): ownership, spawn, generics, Keel ledger, pack, Hetzner land — not in this public tree
 - Compiler stress/fuzz smoke: 600 mutated programs, 400 random-byte, 10 clang compile+run
 
 ## Gates

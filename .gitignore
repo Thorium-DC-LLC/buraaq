@@ -13,6 +13,9 @@ target/
 *.dylib
 *.exe
 !dist/buraaq.exe
+dist/*.zip
+dist/winget-stage/
+dist/winget-*.sha256.txt
 *.idb
 *.ipdb
 *.iobj

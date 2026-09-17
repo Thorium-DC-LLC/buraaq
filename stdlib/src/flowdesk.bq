@@ -1,0 +1,22 @@
+# std.flowdesk — borderless Windows app + Vein text (UI Automation)
+#
+# desk("Flowdesk", 1100, 720)
+# show()
+#
+# Settings: API URL for POST {"text": "…"}.
+# Flow: Read Vein (accessibility tree, no capture/OCR) → Send → API context.
+# Reference: private buraaq-play/flowdesk (not in public ship)
+module std.flowdesk
+
+extern c {
+    fn buraaq_flow_desk(title: c.text, w: c.int, h: c.int) -> c.int
+    fn buraaq_flow_show() -> c.int
+}
+
+pub fn desk(title: text, w: int, h: int) {
+    unsafe { buraaq_flow_desk(title.to_c(), w, h) }
+}
+
+pub fn show() {
+    unsafe { buraaq_flow_show() }
+}

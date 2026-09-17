@@ -46,6 +46,7 @@ Install: `install.ps1` / `install.sh`.
 | `std.os` | `getenv`, `args`, `arg` |
 | `std.keel` | `page`, `api`, `store`, `key`, `origin`, `call`, `run` — TLS APIs. `std.service` is the old name. [STACK.md](STACK.md) |
 | `std.lumen` | `app`, `heading`, `note`, `field`, `button`, `bind`, `show` — native HD UI. [LUMEN.md](LUMEN.md) |
+| `std.flowdesk` | `desk`, `show` — borderless Windows shell + Vein (UI Automation text) |
 | `std.http` | `get` — `file://` all hosts; `https://` via WinINet (Windows) or OpenSSL when linked |
 | `std.db` | `connect`, `connected`, `exec`, `quote`, `disconnect` |
 | `std.json` | `parse`, `Value.field` (string or number/bool token) |

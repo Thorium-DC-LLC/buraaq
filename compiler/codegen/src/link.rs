@@ -78,6 +78,9 @@ pub fn link_executable(
         cmd.arg("-lws2_32");
         cmd.arg("-luser32");
         cmd.arg("-lgdi32");
+        cmd.arg("-lole32");
+        cmd.arg("-loleaut32");
+        cmd.arg("-luiautomationcore");
         cmd.arg("-Wl,/STACK:16777216");
     } else {
         cmd.arg("-lpthread");

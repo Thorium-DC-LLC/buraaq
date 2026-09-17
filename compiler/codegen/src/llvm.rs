@@ -271,6 +271,8 @@ impl<'a> LlvmEmitter<'a> {
             "declare i32 @buraaq_ui_show()",
             "declare i8* @buraaq_ui_value(i8*)",
             "declare i32 @buraaq_ui_clicked(i8*)",
+            "declare i32 @buraaq_flow_desk(i8*, i32, i32)",
+            "declare i32 @buraaq_flow_show()",
             "declare i8* @buraaq_crypto_sha256_hex(i8*)",
             "declare i8* @buraaq_mutex_new()",
             "declare void @buraaq_mutex_lock(i8*)",

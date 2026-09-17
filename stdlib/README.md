@@ -18,6 +18,7 @@ The first Buraaq standard library — small surface area, **one obvious way** fo
 | `src/net.bq` | `std.net` | TCP / UDP |
 | `src/keel.bq` | `std.keel` | APIs + TLS servers (`std.service` is the old name) |
 | `src/lumen.bq` | `std.lumen` | Native HD windows |
+| `src/flowdesk.bq` | `std.flowdesk` | Borderless Windows app + Vein text |
 | `src/db.bq` | `std.db` | PostgreSQL hatch (`exec`, `quote`) |
 | `src/http.bq` | `std.http` | HTTP client (call other APIs) |
 | `src/json.bq` | `std.json` | JSON parse/stringify |
