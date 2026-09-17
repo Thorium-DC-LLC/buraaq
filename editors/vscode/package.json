@@ -1,9 +1,13 @@
 {
   "name": "buraaq",
   "displayName": "Buraaq",
-  "description": "Buraaq language — Write like Python. Run like C. Syntax, LSP, snippets.",
+  "description": "Buraaq by Thorium DC — Write like Python. Run like C. Syntax highlighting, LSP, and snippets for .bq.",
   "version": "1.0.0",
   "publisher": "ThoriumDC",
+  "author": {
+    "name": "Thorium DC",
+    "url": "https://github.com/ThoriumDC"
+  },
   "license": "MIT",
   "icon": "media/icon.png",
   "galleryBanner": {
@@ -23,7 +27,7 @@
     "vscode": "^1.85.0"
   },
   "categories": ["Programming Languages", "Snippets", "Formatters"],
-  "keywords": ["buraaq", "bq", "llvm", "systems", "thorium"],
+  "keywords": ["buraaq", "bq", "llvm", "systems", "thorium", "ThoriumDC"],
   "activationEvents": [
     "onLanguage:buraaq"
   ],
